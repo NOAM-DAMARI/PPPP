@@ -55,7 +55,7 @@ jobs:
       - name: Build APK Release
         run: flutter build apk --release --android-skip-build-dependency-validation
         env:
-          ORG_GRADLE_PROJECT_android_defaults_buildFeatures_resValues=true
+          ORG_GRADLE_PROJECT_android_defaults_buildFeatures_resValues: "true"
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
