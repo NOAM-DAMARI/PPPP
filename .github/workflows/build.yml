@@ -14,6 +14,9 @@ jobs:
         with:
           channel: 'stable'
 
+      - name: Add Windows Platform Support
+        run: flutter create . --platforms=windows
+
       - name: Install dependencies
         run: flutter pub get
 
@@ -43,11 +46,16 @@ jobs:
         with:
           channel: 'stable'
 
+      - name: Add Android Platform Support
+        run: flutter create . --platforms=android
+
       - name: Install dependencies
         run: flutter pub get
 
       - name: Build APK Release
         run: flutter build apk --release --android-skip-build-dependency-validation
+        env:
+          ORG_GRADLE_PROJECT_android_defaults_buildFeatures_resValues=true
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
