@@ -46,13 +46,15 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Fix share_plus AGP 9 Compatibility
+      - name: Fix Plugins Compatibility for AGP 9
         run: |
-          SHARE_PLUS_GRADLE=$(find ~/.pub-cache -path "*/share_plus-*/android/build.gradle" | head -n 1)
-          if [ -f "$SHARE_PLUS_GRADLE" ]; then
-            echo "Fixing $SHARE_PLUS_GRADLE"
-            sed -i '/apply plugin:.*kotlin-android/d' "$SHARE_PLUS_GRADLE"
-          fi
+          find ~/.pub-cache -name "build.gradle" | while read file; do
+            if grep -q "kotlinOptions" "$file" || grep -q "kotlin-android" "$file"; then
+              echo "Cleaning incompatible kotlin config in $file"
+              sed -i '/kotlinOptions/,/}/d' "$file"
+              sed -i '/apply plugin:.*kotlin-android/d' "$file"
+            fi
+          done
 
       - name: Build APK Release
         run: flutter build apk --release --android-skip-build-dependency-validation
