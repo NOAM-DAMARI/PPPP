@@ -99,9 +99,9 @@
     },
     {
       "name": "file_picker",
-      "rootUri": "file:///home/codespace/.pub-cache/hosted/pub.dev/file_picker-8.0.7",
+      "rootUri": "file:///home/codespace/.pub-cache/hosted/pub.dev/file_picker-8.3.7",
       "packageUri": "lib/",
-      "languageVersion": "2.19"
+      "languageVersion": "3.4"
     },
     {
       "name": "fixnum",
@@ -111,7 +111,7 @@
     },
     {
       "name": "flutter",
-      "rootUri": "file:///workspaces/PPPP/_flutter/packages/flutter",
+      "rootUri": "file:///home/codespace/flutter/packages/flutter",
       "packageUri": "lib/",
       "languageVersion": "3.13"
     },
@@ -123,7 +123,7 @@
     },
     {
       "name": "flutter_localizations",
-      "rootUri": "file:///workspaces/PPPP/_flutter/packages/flutter_localizations",
+      "rootUri": "file:///home/codespace/flutter/packages/flutter_localizations",
       "packageUri": "lib/",
       "languageVersion": "3.13"
     },
@@ -135,13 +135,13 @@
     },
     {
       "name": "flutter_test",
-      "rootUri": "file:///workspaces/PPPP/_flutter/packages/flutter_test",
+      "rootUri": "file:///home/codespace/flutter/packages/flutter_test",
       "packageUri": "lib/",
       "languageVersion": "3.13"
     },
     {
       "name": "flutter_web_plugins",
-      "rootUri": "file:///workspaces/PPPP/_flutter/packages/flutter_web_plugins",
+      "rootUri": "file:///home/codespace/flutter/packages/flutter_web_plugins",
       "packageUri": "lib/",
       "languageVersion": "3.13"
     },
@@ -375,7 +375,7 @@
     },
     {
       "name": "printing",
-      "rootUri": "file:///home/codespace/.pub-cache/hosted/pub.dev/printing-5.13.1",
+      "rootUri": "file:///home/codespace/.pub-cache/hosted/pub.dev/printing-5.14.3",
       "packageUri": "lib/",
       "languageVersion": "3.3"
     },
@@ -405,13 +405,13 @@
     },
     {
       "name": "share_plus",
-      "rootUri": "file:///home/codespace/.pub-cache/hosted/pub.dev/share_plus-9.0.0",
+      "rootUri": "file:///home/codespace/.pub-cache/hosted/pub.dev/share_plus-10.1.4",
       "packageUri": "lib/",
-      "languageVersion": "3.3"
+      "languageVersion": "3.4"
     },
     {
       "name": "share_plus_platform_interface",
-      "rootUri": "file:///home/codespace/.pub-cache/hosted/pub.dev/share_plus_platform_interface-4.0.0",
+      "rootUri": "file:///home/codespace/.pub-cache/hosted/pub.dev/share_plus_platform_interface-5.0.2",
       "packageUri": "lib/",
       "languageVersion": "2.18"
     },
@@ -459,7 +459,7 @@
     },
     {
       "name": "sky_engine",
-      "rootUri": "file:///workspaces/PPPP/_flutter/bin/cache/pkg/sky_engine",
+      "rootUri": "file:///home/codespace/flutter/bin/cache/pkg/sky_engine",
       "packageUri": "lib/",
       "languageVersion": "3.13"
     },
@@ -549,9 +549,9 @@
     },
     {
       "name": "web",
-      "rootUri": "file:///home/codespace/.pub-cache/hosted/pub.dev/web-0.5.1",
+      "rootUri": "file:///home/codespace/.pub-cache/hosted/pub.dev/web-1.1.2",
       "packageUri": "lib/",
-      "languageVersion": "3.3"
+      "languageVersion": "3.13"
     },
     {
       "name": "web_socket",
@@ -598,7 +598,7 @@
   ],
   "generator": "pub",
   "generatorVersion": "3.14.0",
-  "flutterRoot": "file:///workspaces/PPPP/_flutter",
+  "flutterRoot": "file:///home/codespace/flutter",
   "flutterVersion": "3.50.0",
   "pubCache": "file:///home/codespace/.pub-cache"
 }
