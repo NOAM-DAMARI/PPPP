@@ -2,7 +2,6 @@ import '../models/lesson.dart';
 import '../utils/helpers.dart';
 import 'app_state.dart';
 import 'dart:convert';
-import 'dart:typed_data';
 import '../screens/pdf_preview_screen.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
