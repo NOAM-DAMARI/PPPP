@@ -20,14 +20,14 @@ mixin MediaFields {
   bool get isInCloud => remoteUrl != null || assetApi != null;
 
   Map<String, dynamic> mediaJson() => {
-        'filePath': filePath,
-        'fileName': fileName,
-        'remoteUrl': remoteUrl,
-        'assetApi': assetApi,
-        'fileSize': fileSize,
-        'clipStartMs': clipStartMs,
-        'clipEndMs': clipEndMs,
-      };
+    'filePath': filePath,
+    'fileName': fileName,
+    'remoteUrl': remoteUrl,
+    'assetApi': assetApi,
+    'fileSize': fileSize,
+    'clipStartMs': clipStartMs,
+    'clipEndMs': clipEndMs,
+  };
 
   void readMedia(Map j) {
     filePath = j['filePath'];

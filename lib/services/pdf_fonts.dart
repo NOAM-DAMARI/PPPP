@@ -28,15 +28,15 @@ class PdfFonts {
 
   /// ערכת נושא לעמוד: גופן עברי + גופן משלים לספרות ופיסוק.
   pw.ThemeData get theme => pw.ThemeData.withFont(
-        base: base,
-        bold: bold,
-        fontFallback: [fallback, fallbackBold],
-      );
+    base: base,
+    bold: bold,
+    fontFallback: [fallback, fallbackBold],
+  );
 
   /// סגנון טקסט עם גופן משלים (גם כשמגדירים font במפורש).
   pw.TextStyle style({double size = 11, bool isBold = false}) => pw.TextStyle(
-        font: isBold ? bold : base,
-        fontSize: size,
-        fontFallback: [isBold ? fallbackBold : fallback],
-      );
+    font: isBold ? bold : base,
+    fontSize: size,
+    fontFallback: [isBold ? fallbackBold : fallback],
+  );
 }

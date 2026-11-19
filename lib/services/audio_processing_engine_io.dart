@@ -27,7 +27,9 @@ Future<Uint8List> runFfmpeg({
     if (r.exitCode != 0) {
       throw Exception('עיבוד השמע נכשל: ${r.stderr}');
     }
-    return Uint8List.fromList(await File('${dir.path}/$outputName').readAsBytes());
+    return Uint8List.fromList(
+      await File('${dir.path}/$outputName').readAsBytes(),
+    );
   } finally {
     if (await dir.exists()) await dir.delete(recursive: true);
   }

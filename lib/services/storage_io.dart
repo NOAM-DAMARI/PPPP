@@ -175,17 +175,22 @@ Future<UploadResponse> uploadStream({
     headers.forEach((k, v) => req.headers.set(k, v));
     req.contentLength = length;
     var sent = 0;
-    final Stream<List<int>> source =
-        path != null ? File(path).openRead() : Stream.value(bytes ?? const []);
-    await req.addStream(source.map((c) {
-      sent += c.length;
-      onProgress?.call(sent, length);
-      return c;
-    }));
+    final Stream<List<int>> source = path != null
+        ? File(path).openRead()
+        : Stream.value(bytes ?? const []);
+    await req.addStream(
+      source.map((c) {
+        sent += c.length;
+        onProgress?.call(sent, length);
+        return c;
+      }),
+    );
     // בלי מגבלת זמן חיבור שנפל נשאר "תקוע ב-100%" לנצח
-    final res = await req.close().timeout(const Duration(minutes: 15),
-        onTimeout: () =>
-            throw Exception('השרת לא אישר את סיום ההעלאה (פג זמן). נסה שוב.'));
+    final res = await req.close().timeout(
+      const Duration(minutes: 15),
+      onTimeout: () =>
+          throw Exception('השרת לא אישר את סיום ההעלאה (פג זמן). נסה שוב.'),
+    );
     final body = await res
         .transform(utf8.decoder)
         .join()

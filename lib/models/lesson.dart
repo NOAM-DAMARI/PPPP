@@ -14,31 +14,30 @@ class TranscriptVersion {
   String id, providerId, label;
   DateTime created;
   List<Seg> segs;
-  TranscriptVersion(
-      {required this.id,
-      required this.providerId,
-      required this.label,
-      DateTime? created,
-      List<Seg>? segs})
-      : created = created ?? DateTime.now(),
-        segs = segs ?? [];
+  TranscriptVersion({
+    required this.id,
+    required this.providerId,
+    required this.label,
+    DateTime? created,
+    List<Seg>? segs,
+  }) : created = created ?? DateTime.now(),
+       segs = segs ?? [];
 
   Map toJson() => {
-        'id': id,
-        'providerId': providerId,
-        'label': label,
-        'created': created.toIso8601String(),
-        'segs': segs,
-      };
+    'id': id,
+    'providerId': providerId,
+    'label': label,
+    'created': created.toIso8601String(),
+    'segs': segs,
+  };
 
   factory TranscriptVersion.fromJson(Map j) => TranscriptVersion(
-        id: j['id']?.toString() ??
-            DateTime.now().microsecondsSinceEpoch.toString(),
-        providerId: j['providerId']?.toString() ?? '',
-        label: j['label']?.toString() ?? 'תמלול',
-        created: DateTime.tryParse(j['created']?.toString() ?? ''),
-        segs: ((j['segs'] ?? []) as List).map((e) => Seg.fromJson(e)).toList(),
-      );
+    id: j['id']?.toString() ?? DateTime.now().microsecondsSinceEpoch.toString(),
+    providerId: j['providerId']?.toString() ?? '',
+    label: j['label']?.toString() ?? 'תמלול',
+    created: DateTime.tryParse(j['created']?.toString() ?? ''),
+    segs: ((j['segs'] ?? []) as List).map((e) => Seg.fromJson(e)).toList(),
+  );
 }
 
 class Lesson with MediaFields {
@@ -76,40 +75,41 @@ class Lesson with MediaFields {
     this.notes = '',
     this.summary = '',
     DateTime? date,
-  })  : date = date ?? DateTime.now(),
-        added = DateTime.now();
+  }) : date = date ?? DateTime.now(),
+       added = DateTime.now();
 
   Map toJson() => {
-        'id': id,
-        'title': title,
-        'parasha': parasha,
-        'parashaKind': parashaKind,
-        'number': number,
-        'dateKind': dateKind,
-        'notes': notes,
-        'summary': summary,
-        'fav': fav,
-        'date': date.toIso8601String(),
-        'added': added.toIso8601String(),
-        'points': points,
-        'pointNotes': pointNotes,
-        'pointTimes': pointTimes,
-        'pointEnds': pointEnds,
-        'pointCats': pointCats,
-        'pointSubs': pointSubs,
-        'marks': marks,
-        'transcript': transcript,
-        'transcripts': transcripts,
-        ...mediaJson(),
-      };
+    'id': id,
+    'title': title,
+    'parasha': parasha,
+    'parashaKind': parashaKind,
+    'number': number,
+    'dateKind': dateKind,
+    'notes': notes,
+    'summary': summary,
+    'fav': fav,
+    'date': date.toIso8601String(),
+    'added': added.toIso8601String(),
+    'points': points,
+    'pointNotes': pointNotes,
+    'pointTimes': pointTimes,
+    'pointEnds': pointEnds,
+    'pointCats': pointCats,
+    'pointSubs': pointSubs,
+    'marks': marks,
+    'transcript': transcript,
+    'transcripts': transcripts,
+    ...mediaJson(),
+  };
 
-  factory Lesson.fromJson(Map j) => Lesson(
-        id: j['id'],
-        title: j['title'] ?? '',
-        notes: j['notes'] ?? '',
-        summary: j['summary'] ?? '',
-        date: DateTime.tryParse(j['date'] ?? ''),
-      )
+  factory Lesson.fromJson(Map j) =>
+      Lesson(
+          id: j['id'],
+          title: j['title'] ?? '',
+          notes: j['notes'] ?? '',
+          summary: j['summary'] ?? '',
+          date: DateTime.tryParse(j['date'] ?? ''),
+        )
         ..fav = j['fav'] == true
         ..parasha = j['parasha']?.toString() ?? ''
         ..parashaKind = j['parashaKind'] == 'event' ? 'event' : 'weekly'
@@ -124,8 +124,9 @@ class Lesson with MediaFields {
             .map((e) => Seg.fromJson(e))
             .toList()
         ..pointEnds = List<int>.from((j['pointEnds'] ?? []) as List)
-        ..marks =
-            ((j['marks'] ?? []) as List).map((e) => Seg.fromJson(e)).toList()
+        ..marks = ((j['marks'] ?? []) as List)
+            .map((e) => Seg.fromJson(e))
+            .toList()
         ..transcript = ((j['transcript'] ?? []) as List)
             .map((e) => Seg.fromJson(e))
             .toList()

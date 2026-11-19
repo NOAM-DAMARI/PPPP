@@ -12,16 +12,16 @@ class LessonImportInfo {
   });
 
   Map<String, dynamic> toJson() => {
-        'title': title,
-        'number': number,
-        'parasha': parasha,
-        'parashaKind': parashaKind,
-      };
+    'title': title,
+    'number': number,
+    'parasha': parasha,
+    'parashaKind': parashaKind,
+  };
 
   factory LessonImportInfo.fromJson(Map json) => LessonImportInfo(
-        title: json['title']?.toString() ?? '',
-        number: (json['number'] as num?)?.toInt(),
-        parasha: json['parasha']?.toString() ?? '',
-        parashaKind: json['parashaKind'] == 'event' ? 'event' : 'weekly',
-      );
+    title: json['title']?.toString() ?? '',
+    number: (json['number'] as num?)?.toInt(),
+    parasha: json['parasha']?.toString() ?? '',
+    parashaKind: json['parashaKind'] == 'event' ? 'event' : 'weekly',
+  );
 }

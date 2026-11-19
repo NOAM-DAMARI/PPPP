@@ -54,15 +54,20 @@ class _LiveSubtitlesState extends State<LiveSubtitles> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final ctx = _keys[i]?.currentContext;
       if (ctx != null && mounted) {
-        Scrollable.ensureVisible(ctx,
-            alignment: .4, duration: const Duration(milliseconds: 380), curve: Curves.easeOutCubic);
+        Scrollable.ensureVisible(
+          ctx,
+          alignment: .4,
+          duration: const Duration(milliseconds: 380),
+          curve: Curves.easeOutCubic,
+        );
       }
     });
   }
 
   String _time(int ms) {
     final d = Duration(milliseconds: ms);
-    final m = d.inMinutes.toString().padLeft(2, '0'), s = (d.inSeconds % 60).toString().padLeft(2, '0');
+    final m = d.inMinutes.toString().padLeft(2, '0'),
+        s = (d.inSeconds % 60).toString().padLeft(2, '0');
     return d.inHours > 0 ? '${d.inHours}:$m:$s' : '$m:$s';
   }
 
@@ -81,49 +86,79 @@ class _LiveSubtitlesState extends State<LiveSubtitles> {
             // גלילה ידנית עוצרת את המעקב ל-4 שניות
             if (n is UserScrollNotification) {
               _userScrolling = true;
-              Future.delayed(const Duration(seconds: 4), () => _userScrolling = false);
+              Future.delayed(
+                const Duration(seconds: 4),
+                () => _userScrolling = false,
+              );
             }
             return false;
           },
           child: SingleChildScrollView(
             padding: widget.padding.copyWith(top: 120, bottom: 200),
-            child: Column(children: [
-              for (var i = 0; i < widget.segs.length; i++)
-                InkWell(
-                  key: _key(i),
-                  borderRadius: BorderRadius.circular(12),
-                  onTap: () => player.seekTo(widget.track, widget.segs[i].ms),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 260),
-                    width: double.infinity,
-                    margin: const EdgeInsets.symmetric(vertical: 2),
-                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-                    decoration: BoxDecoration(
-                      color: i == active ? accent.withValues(alpha: .12) : null,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(children: [
-                      if (widget.showTimes)
-                        Text(_time(widget.segs[i].ms),
-                            style: TextStyle(fontSize: 11, color: c.onSurfaceVariant, fontFeatures: const [])),
-                      AnimatedDefaultTextStyle(
-                        duration: const Duration(milliseconds: 260),
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontFamily: Theme.of(context).textTheme.bodyLarge?.fontFamily,
-                          fontSize: (i == active ? 24 : 19) * widget.fontScale,
-                          height: 1.45,
-                          fontWeight: i == active ? FontWeight.w800 : FontWeight.w500,
-                          color: i == active
-                              ? accent
-                              : (active >= 0 ? c.onSurface.withValues(alpha: i < active ? .4 : .65) : c.onSurface),
-                        ),
-                        child: Text(widget.segs[i].text, textAlign: TextAlign.center),
+            child: Column(
+              children: [
+                for (var i = 0; i < widget.segs.length; i++)
+                  InkWell(
+                    key: _key(i),
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () => player.seekTo(widget.track, widget.segs[i].ms),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 260),
+                      width: double.infinity,
+                      margin: const EdgeInsets.symmetric(vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 8,
+                        horizontal: 10,
                       ),
-                    ]),
+                      decoration: BoxDecoration(
+                        color: i == active
+                            ? accent.withValues(alpha: .12)
+                            : null,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        children: [
+                          if (widget.showTimes)
+                            Text(
+                              _time(widget.segs[i].ms),
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: c.onSurfaceVariant,
+                                fontFeatures: const [],
+                              ),
+                            ),
+                          AnimatedDefaultTextStyle(
+                            duration: const Duration(milliseconds: 260),
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: Theme.of(
+                                context,
+                              ).textTheme.bodyLarge?.fontFamily,
+                              fontSize:
+                                  (i == active ? 24 : 19) * widget.fontScale,
+                              height: 1.45,
+                              fontWeight: i == active
+                                  ? FontWeight.w800
+                                  : FontWeight.w500,
+                              color: i == active
+                                  ? accent
+                                  : (active >= 0
+                                        ? c.onSurface.withValues(
+                                            alpha: i < active ? .4 : .65,
+                                          )
+                                        : c.onSurface),
+                            ),
+                            child: Text(
+                              widget.segs[i].text,
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
-            ]),
+              ],
+            ),
           ),
         );
       },

@@ -7,5 +7,4 @@ Future<Uint8List> runFfmpeg({
   required String inputName,
   required String outputName,
   required List<String> args,
-}) =>
-    throw UnsupportedError('FFmpeg לא זמין');
+}) => throw UnsupportedError('FFmpeg לא זמין');

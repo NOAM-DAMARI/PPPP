@@ -14,7 +14,8 @@ String? safeZipPath(String path) {
       .toList();
   if (parts.isEmpty ||
       parts.any((part) => part == '..') ||
-      parts.first == '__MACOSX') return null;
+      parts.first == '__MACOSX')
+    return null;
   return parts.join('/');
 }
 
@@ -25,10 +26,13 @@ bool _allowed(String path, Set<String> extensions) {
 }
 
 List<ZipEntry> listImportableZipEntriesFromBytes(
-    Uint8List bytes, List<String> allowedExtensions) {
+  Uint8List bytes,
+  List<String> allowedExtensions,
+) {
   final archive = ZipDecoder().decodeBytes(bytes);
-  final allowed =
-      allowedExtensions.map((extension) => extension.toLowerCase()).toSet();
+  final allowed = allowedExtensions
+      .map((extension) => extension.toLowerCase())
+      .toSet();
   final entries = <ZipEntry>[];
   for (final file in archive.files) {
     if (!file.isFile) continue;
@@ -40,7 +44,9 @@ List<ZipEntry> listImportableZipEntriesFromBytes(
 }
 
 Map<String, Uint8List> extractSelectedZipEntriesFromBytes(
-    Uint8List bytes, Set<String> selected) {
+  Uint8List bytes,
+  Set<String> selected,
+) {
   final archive = ZipDecoder().decodeBytes(bytes);
   final result = <String, Uint8List>{};
   for (final file in archive.files) {
@@ -58,7 +64,8 @@ enum ArchiveKind { zip, tar, tarGz }
 ArchiveKind? archiveKindOf(String fileName) {
   final name = fileName.toLowerCase();
   if (name.endsWith('.zip')) return ArchiveKind.zip;
-  if (name.endsWith('.tar.gz') || name.endsWith('.tgz')) return ArchiveKind.tarGz;
+  if (name.endsWith('.tar.gz') || name.endsWith('.tgz'))
+    return ArchiveKind.tarGz;
   if (name.endsWith('.tar')) return ArchiveKind.tar;
   return null;
 }
@@ -76,10 +83,14 @@ Archive decodeArchiveBytes(Uint8List bytes, ArchiveKind kind) {
 
 /// רשימת הקבצים הניתנים לייבוא מתוך ארכיון בזיכרון (ZIP / TAR / TAR.GZ)
 List<ZipEntry> listImportableEntriesFromBytes(
-    Uint8List bytes, List<String> allowedExtensions, ArchiveKind kind) {
+  Uint8List bytes,
+  List<String> allowedExtensions,
+  ArchiveKind kind,
+) {
   final archive = decodeArchiveBytes(bytes, kind);
-  final allowed =
-      allowedExtensions.map((extension) => extension.toLowerCase()).toSet();
+  final allowed = allowedExtensions
+      .map((extension) => extension.toLowerCase())
+      .toSet();
   final entries = <ZipEntry>[];
   for (final file in archive.files) {
     if (!file.isFile) continue;
@@ -98,7 +109,7 @@ class ZipBytesReader {
   final Map<String, ArchiveFile> _byPath = {};
 
   ZipBytesReader(Uint8List bytes, [ArchiveKind kind = ArchiveKind.zip])
-      : _archive = decodeArchiveBytes(bytes, kind) {
+    : _archive = decodeArchiveBytes(bytes, kind) {
     for (final file in _archive.files) {
       final path = safeZipPath(file.name);
       if (file.isFile && path != null) _byPath[path] = file;
@@ -109,8 +120,6 @@ class ZipBytesReader {
     final file = _byPath[path];
     if (file == null) return null;
     final content = file.content;
-    return content is Uint8List
-        ? content
-        : Uint8List.fromList(List<int>.from(content as List));
+    return content;
   }
 }

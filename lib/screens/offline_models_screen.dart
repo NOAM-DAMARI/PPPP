@@ -17,12 +17,27 @@ class OfflineModelsScreen extends StatefulWidget {
   const OfflineModelsScreen({super.key});
 
   static const models = [
-    OfflineModel('fast', 'מהיר', '190MB', 'מתאים לטלפונים חלשים, דיוק בסיסי',
-        'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin'),
-    OfflineModel('recommended', 'מומלץ', '574MB', 'איזון טוב בין מהירות לדיוק',
-        'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin'),
-    OfflineModel('hebrew', 'מודל עברית מותאם', '1.6GB', 'ivrit.ai – הדיוק הגבוה ביותר בעברית, דורש טלפון חזק',
-        'https://huggingface.co/ivrit-ai/whisper-large-v3-turbo-ggml/resolve/main/ggml-model.bin'),
+    OfflineModel(
+      'fast',
+      'מהיר',
+      '190MB',
+      'מתאים לטלפונים חלשים, דיוק בסיסי',
+      'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin',
+    ),
+    OfflineModel(
+      'recommended',
+      'מומלץ',
+      '574MB',
+      'איזון טוב בין מהירות לדיוק',
+      'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin',
+    ),
+    OfflineModel(
+      'hebrew',
+      'מודל עברית מותאם',
+      '1.6GB',
+      'ivrit.ai – הדיוק הגבוה ביותר בעברית, דורש טלפון חזק',
+      'https://huggingface.co/ivrit-ai/whisper-large-v3-turbo-ggml/resolve/main/ggml-model.bin',
+    ),
   ];
 
   static Future<File> fileFor(OfflineModel m) async {
@@ -62,7 +77,8 @@ class _OfflineModelsScreenState extends State<OfflineModelsScreen> {
     final client = http.Client();
     try {
       final res = await client.send(http.Request('GET', Uri.parse(m.url)));
-      if (res.statusCode != 200) throw Exception('שגיאת הורדה ${res.statusCode}');
+      if (res.statusCode != 200)
+        throw Exception('שגיאת הורדה ${res.statusCode}');
       final total = res.contentLength;
       final sink = tmp.openWrite();
       var got = 0;
@@ -104,47 +120,80 @@ class _OfflineModelsScreenState extends State<OfflineModelsScreen> {
       appBar: AppBar(title: const Text('תמלול מקומי (ללא אינטרנט)')),
       body: kIsWeb
           ? const Center(child: Text('תמלול מקומי זמין רק באפליקציה לאנדרואיד'))
-          : ListView(padding: const EdgeInsets.all(16), children: [
-              Text('בחר מודל להורדה. הקבצים נשמרים במכשיר בלבד. קבצי שמע מומרים אוטומטית לפורמט המתאים לפני התמלול.',
-                  style: TextStyle(color: c.onSurfaceVariant)),
-              const SizedBox(height: 12),
-              for (final m in OfflineModelsScreen.models)
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                      Row(children: [
-                        Expanded(
-                            child: Text('${m.label} · ${m.size}', style: const TextStyle(fontWeight: FontWeight.w700))),
-                        if (present[m.id] == true) Icon(Icons.check_circle_rounded, color: c.primary),
-                      ]),
-                      Text(m.note, style: TextStyle(color: c.onSurfaceVariant)),
-                      const SizedBox(height: 8),
-                      if (progress.containsKey(m.id)) ...[
-                        LinearProgressIndicator(value: progress[m.id]),
-                        TextButton(onPressed: () => cancelled.add(m.id), child: const Text('ביטול')),
-                      ] else
-                        Wrap(spacing: 8, children: [
-                          if (present[m.id] != true)
-                            FilledButton.icon(
-                                icon: const Icon(Icons.download_rounded),
-                                label: const Text('הורדה'),
-                                onPressed: () => _download(m)),
-                          if (present[m.id] == true)
-                            OutlinedButton.icon(
-                              icon: const Icon(Icons.delete_outline_rounded),
-                              label: const Text('מחיקה'),
-                              onPressed: () async {
-                                final f = await OfflineModelsScreen.fileFor(m);
-                                if (f.existsSync()) await f.delete();
-                                await _refresh();
-                              },
-                            ),
-                        ]),
-                    ]),
-                  ),
+          : ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                Text(
+                  'בחר מודל להורדה. הקבצים נשמרים במכשיר בלבד. קבצי שמע מומרים אוטומטית לפורמט המתאים לפני התמלול.',
+                  style: TextStyle(color: c.onSurfaceVariant),
                 ),
-            ]),
+                const SizedBox(height: 12),
+                for (final m in OfflineModelsScreen.models)
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  '${m.label} · ${m.size}',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                              if (present[m.id] == true)
+                                Icon(
+                                  Icons.check_circle_rounded,
+                                  color: c.primary,
+                                ),
+                            ],
+                          ),
+                          Text(
+                            m.note,
+                            style: TextStyle(color: c.onSurfaceVariant),
+                          ),
+                          const SizedBox(height: 8),
+                          if (progress.containsKey(m.id)) ...[
+                            LinearProgressIndicator(value: progress[m.id]),
+                            TextButton(
+                              onPressed: () => cancelled.add(m.id),
+                              child: const Text('ביטול'),
+                            ),
+                          ] else
+                            Wrap(
+                              spacing: 8,
+                              children: [
+                                if (present[m.id] != true)
+                                  FilledButton.icon(
+                                    icon: const Icon(Icons.download_rounded),
+                                    label: const Text('הורדה'),
+                                    onPressed: () => _download(m),
+                                  ),
+                                if (present[m.id] == true)
+                                  OutlinedButton.icon(
+                                    icon: const Icon(
+                                      Icons.delete_outline_rounded,
+                                    ),
+                                    label: const Text('מחיקה'),
+                                    onPressed: () async {
+                                      final f =
+                                          await OfflineModelsScreen.fileFor(m);
+                                      if (f.existsSync()) await f.delete();
+                                      await _refresh();
+                                    },
+                                  ),
+                              ],
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
     );
   }
 }

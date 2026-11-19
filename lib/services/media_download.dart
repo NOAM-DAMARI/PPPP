@@ -40,7 +40,8 @@ String? _extOf(String? source) {
 /// ולא השם הטכני שבמאגר (media_songs_1794..._______.mp3).
 /// אם אין שם מקורי – שם השיעור/השיר, עם הסיומת המתאימה.
 String originalDownloadName(MediaFields m, {String fallbackTitle = ''}) {
-  final ext = _extOf(m.fileName) ??
+  final ext =
+      _extOf(m.fileName) ??
       _extOf(m.filePath) ??
       _extOf(m.remoteUrl) ??
       _extOf(m.assetApi) ??
@@ -110,8 +111,11 @@ Future<Uint8List> fetchMediaBytes(MediaFields m) async {
 /// הורדה / שמירה של קובץ בשם המקורי.
 /// - דפדפן: מוריד ישירות לתיקיית ההורדות בשם המקורי.
 /// - מכשיר: חלון "שמירה בשם" עם השם המקורי.
-Future<bool> downloadWithOriginalName(BuildContext context, MediaFields m,
-    {String fallbackTitle = ''}) async {
+Future<bool> downloadWithOriginalName(
+  BuildContext context,
+  MediaFields m, {
+  String fallbackTitle = '',
+}) async {
   final name = originalDownloadName(m, fallbackTitle: fallbackTitle);
   final mime = mimeForFileName(name);
   if (!m.hasMedia) {
@@ -127,8 +131,10 @@ Future<bool> downloadWithOriginalName(BuildContext context, MediaFields m,
       // גיבוי אחרון: קישור ישיר. הדפדפן עלול להתעלם משם הקובץ בקישור חיצוני.
       await openDownloadUrl(m.remoteUrl!, name);
       if (context.mounted) {
-        snack(context,
-            'ההורדה הישירה התחילה, אך הדפדפן עשוי לשמור בשם הטכני. ($error)');
+        snack(
+          context,
+          'ההורדה הישירה התחילה, אך הדפדפן עשוי לשמור בשם הטכני. ($error)',
+        );
       }
       return true;
     }
@@ -141,8 +147,10 @@ Future<bool> downloadWithOriginalName(BuildContext context, MediaFields m,
       if (context.mounted) snack(context, 'ההורדה החלה: $name');
       return true;
     }
-    final path =
-        await FilePicker.platform.saveFile(fileName: name, bytes: bytes);
+    final path = await FilePicker.platform.saveFile(
+      fileName: name,
+      bytes: bytes,
+    );
     if (path == null) {
       if (context.mounted) snack(context, 'לא נבחר מיקום לשמירה');
       return false;

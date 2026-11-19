@@ -4,11 +4,12 @@ export 'folder_tools_stub.dart' if (dart.library.io) 'folder_tools_io.dart';
 class FreeFile {
   final String path, name, relative;
   final int size;
-  const FreeFile(
-      {required this.path,
-      required this.name,
-      required this.relative,
-      required this.size});
+  const FreeFile({
+    required this.path,
+    required this.name,
+    required this.relative,
+    required this.size,
+  });
 }
 
 class ZipEntry {

@@ -30,13 +30,22 @@ extension LessonPoints on Lesson {
   int pointEnd(int i) {
     final s = pointStart(i);
     if (i < pointEnds.length && pointEnds[i] > s) return pointEnds[i];
-    if (i + 1 < pointTimes.length && pointTimes[i + 1].ms > s) return pointTimes[i + 1].ms;
+    if (i + 1 < pointTimes.length && pointTimes[i + 1].ms > s)
+      return pointTimes[i + 1].ms;
     return s + defaultLengthMs;
   }
 
-  bool pointHasEnd(int i) => i < pointEnds.length && pointEnds[i] > pointStart(i);
+  bool pointHasEnd(int i) =>
+      i < pointEnds.length && pointEnds[i] > pointStart(i);
 
-  int addPoint({required String title, String note = '', required int startMs, int endMs = 0, String cat = '', String sub = ''}) {
+  int addPoint({
+    required String title,
+    String note = '',
+    required int startMs,
+    int endMs = 0,
+    String cat = '',
+    String sub = '',
+  }) {
     points.add(title);
     final i = points.length - 1;
     _pad(i);
@@ -48,7 +57,15 @@ extension LessonPoints on Lesson {
     return i;
   }
 
-  void updatePoint(int i, {String? title, String? note, int? startMs, int? endMs, String? cat, String? sub}) {
+  void updatePoint(
+    int i, {
+    String? title,
+    String? note,
+    int? startMs,
+    int? endMs,
+    String? cat,
+    String? sub,
+  }) {
     if (i < 0 || i >= points.length) return;
     _pad(i);
     if (title != null) points[i] = title;
@@ -86,7 +103,9 @@ extension LessonPoints on Lesson {
     final rows = <String>[];
     for (var k = 0; k < transcript.length; k++) {
       final segStart = transcript[k].ms;
-      final segEnd = k + 1 < transcript.length ? transcript[k + 1].ms : segStart + 1;
+      final segEnd = k + 1 < transcript.length
+          ? transcript[k + 1].ms
+          : segStart + 1;
       if (segEnd > s && segStart < e) rows.add(transcript[k].text);
     }
     return rows.join('\n');

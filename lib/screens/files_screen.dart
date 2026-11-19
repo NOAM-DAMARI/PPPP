@@ -34,8 +34,10 @@ class _FilesScreenState extends State<FilesScreen> {
 
   Future<bool> _requireStorage() async {
     if (app.localEnabled || app.githubReady) return true;
-    snack(context,
-        'הגדר תיקייה מקומית או התחבר למאגר GitHub בהגדרות כדי להעלות קבצים');
+    snack(
+      context,
+      'הגדר תיקייה מקומית או התחבר למאגר GitHub בהגדרות כדי להעלות קבצים',
+    );
     return false;
   }
 
@@ -70,8 +72,10 @@ class _FilesScreenState extends State<FilesScreen> {
         .toList();
     if (rejected.isNotEmpty) {
       setState(() => uploading = false);
-      snack(context,
-          'סוג קובץ לא נתמך: ${rejected.take(3).join(', ')}. מותר רק MP3, AAC, WAV, FLAC, OGG (או ארכיון ZIP / TAR.GZ בכפתור הייבוא).');
+      snack(
+        context,
+        'סוג קובץ לא נתמך: ${rejected.take(3).join(', ')}. מותר רק MP3, AAC, WAV, FLAC, OGG (או ארכיון ZIP / TAR.GZ בכפתור הייבוא).',
+      );
       return;
     }
     try {
@@ -96,16 +100,22 @@ class _FilesScreenState extends State<FilesScreen> {
           }
           final asset = UnassignedMedia(id: app.newId());
           final media = PickedMedia(
-              path: path,
-              name: file.name,
-              size: file.bytes?.length ?? file.size,
-              bytes: file.bytes);
+            path: path,
+            name: file.name,
+            size: file.bytes?.length ?? file.size,
+            bytes: file.bytes,
+          );
           if (!mounted) return;
           await runWithProgress(
-              context,
-              'מעלה את ${file.name}',
-              (report) => GitHubMedia.upload(media, asset,
-                  folder: 'inbox', onProgress: report));
+            context,
+            'מעלה את ${file.name}',
+            (report) => GitHubMedia.upload(
+              media,
+              asset,
+              folder: 'inbox',
+              onProgress: report,
+            ),
+          );
           app.unassignedMedia.add(asset);
           uploadedCount++;
           if (mounted) setState(() => uploadDone = uploadedCount);
@@ -115,8 +125,10 @@ class _FilesScreenState extends State<FilesScreen> {
       if (mounted) {
         setState(() {});
         final count = useLocal ? copiedCount : uploadedCount;
-        snack(context,
-            'הועלו $count קבצים. הם מופיעים ב״לא משויך״ עד לבחירתם בשיעור או בשיר.');
+        snack(
+          context,
+          'הועלו $count קבצים. הם מופיעים ב״לא משויך״ עד לבחירתם בשיעור או בשיר.',
+        );
       }
     } catch (error) {
       if (mounted) {
@@ -136,198 +148,238 @@ class _FilesScreenState extends State<FilesScreen> {
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
-        listenable: app,
-        builder: (context, _) {
-          final songs = const bool.fromEnvironment('LESSONS_ONLY')
-              ? <Song>[]
-              : app.songs.where((song) => song.hasMedia).toList();
-          final lessons =
-              app.lessons.where((lesson) => lesson.hasMedia).toList();
-          final attached = [...songs, ...lessons];
-          final totalBytes = attached.fold<int>(
-              0, (sum, media) => sum + (media.fileSize ?? 0));
-          final canImport = app.localEnabled || app.githubReady;
-          return FutureBuilder<List<FreeFile>>(
-            future: app.freeMediaFiles(extensions: importExts),
-            builder: (context, snapshot) {
-              final localFiles = snapshot.data ?? const <FreeFile>[];
-              final localNames =
-                  localFiles.map((file) => file.name.toLowerCase()).toSet();
-              final remoteFiles = app.unassignedMedia
-                  .where((file) =>
-                      file.fileName != null &&
-                      !localNames.contains(file.fileName!.toLowerCase()))
-                  .toList();
-              final unassignedCount = localFiles.length + remoteFiles.length;
-              final count = attached.length + unassignedCount;
-              final size = totalBytes +
-                  localFiles.fold<int>(0, (sum, file) => sum + file.size) +
-                  remoteFiles.fold<int>(
-                      0, (sum, file) => sum + (file.fileSize ?? 0));
-              return Scaffold(
-                appBar: AppBar(
-                    title: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
+    listenable: app,
+    builder: (context, _) {
+      final songs = const bool.fromEnvironment('LESSONS_ONLY')
+          ? <Song>[]
+          : app.songs.where((song) => song.hasMedia).toList();
+      final lessons = app.lessons.where((lesson) => lesson.hasMedia).toList();
+      final attached = [...songs, ...lessons];
+      final totalBytes = attached.fold<int>(
+        0,
+        (sum, media) => sum + (media.fileSize ?? 0),
+      );
+      final canImport = app.localEnabled || app.githubReady;
+      return FutureBuilder<List<FreeFile>>(
+        future: app.freeMediaFiles(extensions: importExts),
+        builder: (context, snapshot) {
+          final localFiles = snapshot.data ?? const <FreeFile>[];
+          final localNames = localFiles
+              .map((file) => file.name.toLowerCase())
+              .toSet();
+          final remoteFiles = app.unassignedMedia
+              .where(
+                (file) =>
+                    file.fileName != null &&
+                    !localNames.contains(file.fileName!.toLowerCase()),
+              )
+              .toList();
+          final unassignedCount = localFiles.length + remoteFiles.length;
+          final count = attached.length + unassignedCount;
+          final size =
+              totalBytes +
+              localFiles.fold<int>(0, (sum, file) => sum + file.size) +
+              remoteFiles.fold<int>(
+                0,
+                (sum, file) => sum + (file.fileSize ?? 0),
+              );
+          return Scaffold(
+            appBar: AppBar(
+              title: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('קבצים'),
+                  if (uploadTotal > 0)
+                    Text(
+                      '${uploadDone} עלו · ${uploadTotal - uploadDone - uploadFailed} ממתין · ${uploadFailed} שגיאות · מתוך $uploadTotal',
+                      style: Theme.of(context).textTheme.labelSmall,
+                    ),
+                ],
+              ),
+              actions: [
+                IconButton(
+                  tooltip: 'PDF – מספר, שם הקובץ ותאריך עברי',
+                  onPressed: lessons.isEmpty && songs.isEmpty
+                      ? null
+                      : () => printNumberNameDate(
+                          context,
+                          [
+                            for (final l
+                                in [...lessons]..sort(
+                                  (a, b) => (a.number ?? 99999).compareTo(
+                                    b.number ?? 99999,
+                                  ),
+                                ))
+                              (
+                                number: l.number?.toString() ?? '-',
+                                name: l.fileName ?? l.title,
+                                hebrewDate: hebrewDate(l.date),
+                              ),
+                            for (final s in songs)
+                              (
+                                number: '-',
+                                name: s.fileName ?? s.title,
+                                hebrewDate: hebrewDate(s.eventDate ?? s.added),
+                              ),
+                          ],
+                          title: 'רשימת קבצים',
+                          nameHeader: 'שם הקובץ',
+                        ),
+                  icon: const Icon(Icons.picture_as_pdf_rounded),
+                ),
+                IconButton(
+                  tooltip: 'העלאת קבצים',
+                  onPressed: _uploadFiles,
+                  icon: const Icon(Icons.upload_file_rounded),
+                ),
+                IconButton(
+                  tooltip: 'ייבוא ארכיון (ZIP / TAR.GZ)',
+                  onPressed: _uploadZip,
+                  icon: const Icon(Icons.folder_zip_rounded),
+                ),
+              ],
+            ),
+            body: snapshot.connectionState == ConnectionState.waiting
+                ? const Center(child: CircularProgressIndicator())
+                : count == 0
+                ? EmptyState(
+                    icon: Icons.folder_open_rounded,
+                    title: 'אין קבצים',
+                    subtitle: canImport
+                        ? 'העלה קובץ בודד או ZIP כדי להוסיף קבצים לא משויכים'
+                        : 'כדי להעלות קבצים, בחר תיקייה מקומית או התחבר למאגר GitHub בהגדרות',
+                    action: Wrap(
+                      spacing: 8,
                       children: [
-                        const Text('קבצים'),
-                        if (uploadTotal > 0)
-                          Text(
-                            '${uploadDone} עלו · ${uploadTotal - uploadDone - uploadFailed} ממתין · ${uploadFailed} שגיאות · מתוך $uploadTotal',
-                            style: Theme.of(context).textTheme.labelSmall,
+                        FilledButton.icon(
+                          onPressed: _uploadFiles,
+                          icon: const Icon(Icons.upload_file_rounded),
+                          label: const Text('העלאת קבצים'),
+                        ),
+                        OutlinedButton.icon(
+                          onPressed: _uploadZip,
+                          icon: const Icon(Icons.folder_zip_rounded),
+                          label: const Text('ייבוא ארכיון'),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                    children: [
+                      Text(
+                        '$count קבצים · ${fmtBytes(size)}',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      if (unassignedCount > 0) ...[
+                        const SectionTitle('לא משויך'),
+                        if (localFiles.isNotEmpty)
+                          Card(
+                            child: Column(
+                              children: [
+                                for (final file in localFiles)
+                                  _freeFileTile(file),
+                              ],
+                            ),
+                          ),
+                        if (remoteFiles.isNotEmpty)
+                          Card(
+                            child: Column(
+                              children: [
+                                for (final file in remoteFiles)
+                                  _remoteFileTile(file),
+                              ],
+                            ),
                           ),
                       ],
-                    ), actions: [
-                  IconButton(
-                    tooltip: 'PDF – מספר, שם הקובץ ותאריך עברי',
-                    onPressed: lessons.isEmpty && songs.isEmpty
-                        ? null
-                        : () => printNumberNameDate(
-                            context,
-                            [
-                              for (final l in [...lessons]..sort((a, b) =>
-                                  (a.number ?? 99999)
-                                      .compareTo(b.number ?? 99999)))
-                                (
-                                  number: l.number?.toString() ?? '-',
-                                  name: l.fileName ?? l.title,
-                                  hebrewDate: hebrewDate(l.date),
-                                ),
-                              for (final s in songs)
-                                (
-                                  number: '-',
-                                  name: s.fileName ?? s.title,
-                                  hebrewDate: hebrewDate(s.eventDate ?? s.added),
-                                ),
-                            ],
-                            title: 'רשימת קבצים',
-                            nameHeader: 'שם הקובץ'),
-                    icon: const Icon(Icons.picture_as_pdf_rounded),
-                  ),
-                  IconButton(
-                    tooltip: 'העלאת קבצים',
-                    onPressed: _uploadFiles,
-                    icon: const Icon(Icons.upload_file_rounded),
-                  ),
-                  IconButton(
-                    tooltip: 'ייבוא ארכיון (ZIP / TAR.GZ)',
-                    onPressed: _uploadZip,
-                    icon: const Icon(Icons.folder_zip_rounded),
-                  ),
-                ]),
-                body: snapshot.connectionState == ConnectionState.waiting
-                    ? const Center(child: CircularProgressIndicator())
-                    : count == 0
-                        ? EmptyState(
-                            icon: Icons.folder_open_rounded,
-                            title: 'אין קבצים',
-                            subtitle: canImport
-                                ? 'העלה קובץ בודד או ZIP כדי להוסיף קבצים לא משויכים'
-                                : 'כדי להעלות קבצים, בחר תיקייה מקומית או התחבר למאגר GitHub בהגדרות',
-                            action: Wrap(spacing: 8, children: [
-                              FilledButton.icon(
-                                onPressed: _uploadFiles,
-                                icon: const Icon(Icons.upload_file_rounded),
-                                label: const Text('העלאת קבצים'),
-                              ),
-                              OutlinedButton.icon(
-                                onPressed: _uploadZip,
-                                icon: const Icon(Icons.folder_zip_rounded),
-                                label: const Text('ייבוא ארכיון'),
-                              ),
-                            ]),
-                          )
-                        : ListView(
-                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                      if (songs.isNotEmpty) ...[
+                        const SectionTitle('שירים'),
+                        Card(
+                          child: Column(
                             children: [
-                                Text('$count קבצים · ${fmtBytes(size)}',
-                                    style: TextStyle(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurfaceVariant)),
-                                if (unassignedCount > 0) ...[
-                                  const SectionTitle('לא משויך'),
-                                  if (localFiles.isNotEmpty)
-                                    Card(
-                                        child: Column(children: [
-                                      for (final file in localFiles)
-                                        _freeFileTile(file)
-                                    ])),
-                                  if (remoteFiles.isNotEmpty)
-                                    Card(
-                                        child: Column(children: [
-                                      for (final file in remoteFiles)
-                                        _remoteFileTile(file)
-                                    ])),
-                                ],
-                                if (songs.isNotEmpty) ...[
-                                  const SectionTitle('שירים'),
-                                  Card(
-                                      child: Column(children: [
-                                    for (final song in songs)
-                                      _tile(song, song.title, 'songs')
-                                  ])),
-                                ],
-                                if (lessons.isNotEmpty) ...[
-                                  const SectionTitle('שיעורים'),
-                                  Card(
-                                      child: Column(children: [
-                                    for (final lesson in lessons)
-                                      _tile(lesson, lesson.title, 'lessons')
-                                  ])),
-                                ],
-                              ]),
-              );
-            },
+                              for (final song in songs)
+                                _tile(song, song.title, 'songs'),
+                            ],
+                          ),
+                        ),
+                      ],
+                      if (lessons.isNotEmpty) ...[
+                        const SectionTitle('שיעורים'),
+                        Card(
+                          child: Column(
+                            children: [
+                              for (final lesson in lessons)
+                                _tile(lesson, lesson.title, 'lessons'),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
           );
         },
       );
+    },
+  );
 
   Widget _remoteFileTile(UnassignedMedia file) {
     final colors = Theme.of(context).colorScheme;
     final info = file.lessonInfo;
     return ListTile(
       leading: Icon(Icons.cloud_done_rounded, color: colors.primary),
-      title: Text(file.fileName ?? 'קובץ ללא שם',
-          maxLines: 1, overflow: TextOverflow.ellipsis),
+      title: Text(
+        file.fileName ?? 'קובץ ללא שם',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
       subtitle: Text(
-          [
-            fmtBytes(file.fileSize),
-            if (info?.title.isNotEmpty == true) info!.title,
-            if (info?.number != null) 'שיעור ${info!.number}',
-            if (info?.parasha.isNotEmpty == true)
-              '${info!.parashaKind == 'event' ? 'אירוע' : 'פרשה'} ${info.parasha}',
-          ].where((value) => value.isNotEmpty).join(' · '),
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis),
-      trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-        if (file.fileName != null &&
-            audioExts.contains(file.fileName!.split('.').last.toLowerCase()))
+        [
+          fmtBytes(file.fileSize),
+          if (info?.title.isNotEmpty == true) info!.title,
+          if (info?.number != null) 'שיעור ${info!.number}',
+          if (info?.parasha.isNotEmpty == true)
+            '${info!.parashaKind == 'event' ? 'אירוע' : 'פרשה'} ${info.parasha}',
+        ].where((value) => value.isNotEmpty).join(' · '),
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+      ),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (file.fileName != null &&
+              audioExts.contains(file.fileName!.split('.').last.toLowerCase()))
+            IconButton(
+              tooltip: 'הפעלה',
+              icon: const Icon(Icons.play_arrow_rounded),
+              onPressed: () => _playMedia(file, file.fileName!),
+            ),
           IconButton(
-            tooltip: 'הפעלה',
-            icon: const Icon(Icons.play_arrow_rounded),
-            onPressed: () => _playMedia(file, file.fileName!),
+            tooltip: 'הורדה בשם המקורי',
+            icon: const Icon(Icons.download_rounded),
+            onPressed: () => _saveCopy(file),
           ),
-        IconButton(
-          tooltip: 'הורדה בשם המקורי',
-          icon: const Icon(Icons.download_rounded),
-          onPressed: () => _saveCopy(file),
-        ),
-        IconButton(
-          tooltip: 'מחיקת הקובץ',
-          icon: Icon(Icons.delete_outline_rounded, color: colors.error),
-          onPressed: () async {
-            if (!await confirm(context, 'למחוק את הקובץ \"${file.fileName}\"?')) {
-              return;
-            }
-            try {
-              await app.deleteUnassignedMedia(file.id);
-            } catch (error) {
-              if (mounted) snack(context, 'מחיקת הקובץ נכשלה: $error');
-            }
-          },
-        ),
-      ]),
+          IconButton(
+            tooltip: 'מחיקת הקובץ',
+            icon: Icon(Icons.delete_outline_rounded, color: colors.error),
+            onPressed: () async {
+              if (!await confirm(
+                context,
+                'למחוק את הקובץ \"${file.fileName}\"?',
+              )) {
+                return;
+              }
+              try {
+                await app.deleteUnassignedMedia(file.id);
+              } catch (error) {
+                if (mounted) snack(context, 'מחיקת הקובץ נכשלה: $error');
+              }
+            },
+          ),
+        ],
+      ),
     );
   }
 
@@ -338,45 +390,50 @@ class _FilesScreenState extends State<FilesScreen> {
     final icon = ext == 'pdf'
         ? Icons.picture_as_pdf_rounded
         : const {'txt', 'srt', 'vtt', 'lrc'}.contains(ext)
-            ? Icons.description_outlined
-            : Icons.audio_file_rounded;
+        ? Icons.description_outlined
+        : Icons.audio_file_rounded;
     return ListTile(
       leading: Icon(icon, color: color.primary),
       title: Text(file.name, maxLines: 1, overflow: TextOverflow.ellipsis),
       subtitle: Text(
-          [
-            fmtBytes(file.size),
-            file.relative,
-            if (info?.title.isNotEmpty == true) info!.title,
-            if (info?.number != null) 'שיעור ${info!.number}',
-            if (info?.parasha.isNotEmpty == true)
-              '${info!.parashaKind == 'event' ? 'אירוע' : 'פרשה'} ${info.parasha}',
-          ].join(' · '),
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis),
-      trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-        if (audioExts.contains(ext))
-          IconButton(
-            tooltip: 'הפעלה',
-            icon: const Icon(Icons.play_arrow_rounded),
-            onPressed: () => _playMedia(
+        [
+          fmtBytes(file.size),
+          file.relative,
+          if (info?.title.isNotEmpty == true) info!.title,
+          if (info?.number != null) 'שיעור ${info!.number}',
+          if (info?.parasha.isNotEmpty == true)
+            '${info!.parashaKind == 'event' ? 'אירוע' : 'פרשה'} ${info.parasha}',
+        ].join(' · '),
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+      ),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (audioExts.contains(ext))
+            IconButton(
+              tooltip: 'הפעלה',
+              icon: const Icon(Icons.play_arrow_rounded),
+              onPressed: () => _playMedia(
                 UnassignedMedia(id: 'local')
                   ..filePath = file.path
                   ..fileName = file.name,
-                file.name),
+                file.name,
+              ),
+            ),
+          IconButton(
+            tooltip: 'מחיקת הקובץ',
+            icon: Icon(Icons.delete_outline_rounded, color: color.error),
+            onPressed: () async {
+              if (!await confirm(context, 'למחוק את הקובץ \"${file.name}\"?')) {
+                return;
+              }
+              await deleteMedia(file.path);
+              if (mounted) setState(() {});
+            },
           ),
-        IconButton(
-          tooltip: 'מחיקת הקובץ',
-          icon: Icon(Icons.delete_outline_rounded, color: color.error),
-          onPressed: () async {
-            if (!await confirm(context, 'למחוק את הקובץ \"${file.name}\"?')) {
-              return;
-            }
-            await deleteMedia(file.path);
-            if (mounted) setState(() {});
-          },
-        ),
-      ]),
+        ],
+      ),
     );
   }
 
@@ -388,69 +445,91 @@ class _FilesScreenState extends State<FilesScreen> {
     return ListTile(
       leading: Icon(Icons.audio_file_rounded, color: c.primary),
       title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
-      subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(
-            [m.fileName ?? '', fmtBytes(m.fileSize)]
-                .where((e) => e.isNotEmpty)
-                .join(' · '),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            [
+              m.fileName ?? '',
+              fmtBytes(m.fileSize),
+            ].where((e) => e.isNotEmpty).join(' · '),
             maxLines: 1,
-            overflow: TextOverflow.ellipsis),
-        const SizedBox(height: 4),
-        Wrap(spacing: 6, children: [
-          if (m.isInCloud) const Pill('בענן', icon: Icons.cloud_done_rounded),
-          if (offline)
-            Pill('במכשיר',
-                icon: Icons.phone_android_rounded, color: c.tertiary),
-          if (!m.isInCloud && !onDevice)
-            Pill('חסר במכשיר הזה',
-                icon: Icons.warning_amber_rounded, color: c.error),
-        ]),
-        if (dl)
-          Padding(
-              padding: const EdgeInsets.only(top: 6),
-              child: LinearProgressIndicator(value: downloading[m])),
-      ]),
-      isThreeLine: true,
-      trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-        IconButton(
-          tooltip: 'הפעלה',
-          icon: const Icon(Icons.play_arrow_rounded),
-          onPressed: () => _action('play', m, folder),
-        ),
-        IconButton(
-          tooltip: kIsWeb ? 'הורדה בשם המקורי' : 'שמירה לשימוש ללא אינטרנט',
-          icon: Icon(kIsWeb
-              ? Icons.download_rounded
-              : Icons.offline_pin_outlined),
-          onPressed: () => _action(kIsWeb ? 'web' : 'download', m, folder),
-        ),
-        if (!kIsWeb)
-          IconButton(
-            tooltip: 'שמירת עותק בשם המקורי',
-            icon: const Icon(Icons.download_rounded),
-            onPressed: () => _action('web', m, folder),
+            overflow: TextOverflow.ellipsis,
           ),
-        IconButton(
-          tooltip: 'החלפת קובץ',
-          icon: const Icon(Icons.swap_horiz_rounded),
-          onPressed: () => _action('replace', m, folder),
-        ),
-        IconButton(
-          tooltip: 'מחיקת הקובץ',
-          icon: Icon(Icons.delete_outline_rounded, color: c.error),
-          onPressed: () => _action('delete', m, folder),
-        ),
-      ]),
+          const SizedBox(height: 4),
+          Wrap(
+            spacing: 6,
+            children: [
+              if (m.isInCloud)
+                const Pill('בענן', icon: Icons.cloud_done_rounded),
+              if (offline)
+                Pill(
+                  'במכשיר',
+                  icon: Icons.phone_android_rounded,
+                  color: c.tertiary,
+                ),
+              if (!m.isInCloud && !onDevice)
+                Pill(
+                  'חסר במכשיר הזה',
+                  icon: Icons.warning_amber_rounded,
+                  color: c.error,
+                ),
+            ],
+          ),
+          if (dl)
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: LinearProgressIndicator(value: downloading[m]),
+            ),
+        ],
+      ),
+      isThreeLine: true,
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            tooltip: 'הפעלה',
+            icon: const Icon(Icons.play_arrow_rounded),
+            onPressed: () => _action('play', m, folder),
+          ),
+          IconButton(
+            tooltip: kIsWeb ? 'הורדה בשם המקורי' : 'שמירה לשימוש ללא אינטרנט',
+            icon: Icon(
+              kIsWeb ? Icons.download_rounded : Icons.offline_pin_outlined,
+            ),
+            onPressed: () => _action(kIsWeb ? 'web' : 'download', m, folder),
+          ),
+          if (!kIsWeb)
+            IconButton(
+              tooltip: 'שמירת עותק בשם המקורי',
+              icon: const Icon(Icons.download_rounded),
+              onPressed: () => _action('web', m, folder),
+            ),
+          IconButton(
+            tooltip: 'החלפת קובץ',
+            icon: const Icon(Icons.swap_horiz_rounded),
+            onPressed: () => _action('replace', m, folder),
+          ),
+          IconButton(
+            tooltip: 'מחיקת הקובץ',
+            icon: Icon(Icons.delete_outline_rounded, color: c.error),
+            onPressed: () => _action('delete', m, folder),
+          ),
+        ],
+      ),
     );
   }
 
   /// שמירת עותק בשם המקורי (אותו שם שמוצג ברשימה), לא השם הטכני שבמאגר
-  Future<void> _saveCopy(MediaFields m) => downloadWithOriginalName(context, m,
-      fallbackTitle: m is Song
-          ? m.title
-          : m is Lesson
-              ? m.title
-              : '');
+  Future<void> _saveCopy(MediaFields m) => downloadWithOriginalName(
+    context,
+    m,
+    fallbackTitle: m is Song
+        ? m.title
+        : m is Lesson
+        ? m.title
+        : '',
+  );
 
   String onDeviceMsg(MediaFields m) => localFileExists(m.filePath)
       ? 'הקובץ כבר שמור במכשיר'
@@ -459,7 +538,8 @@ class _FilesScreenState extends State<FilesScreen> {
   Future<void> _playMedia(MediaFields media, String name) async {
     try {
       await player.open(
-          Track('preview_$name', TrackKind.lesson, name, '', media));
+        Track('preview_$name', TrackKind.lesson, name, '', media),
+      );
     } catch (error) {
       if (mounted) snack(context, 'ההשמעה נכשלה: $error');
     }
@@ -476,15 +556,17 @@ class _FilesScreenState extends State<FilesScreen> {
         return;
       case 'download':
         if (!m.isInCloud) {
-          snack(context,
-              onDeviceMsg(m));
+          snack(context, onDeviceMsg(m));
           return;
         }
         setState(() => downloading[m] = null);
         try {
-          await MediaResolver.ensureLocal(m, onProgress: (g, t) {
-            if (mounted && t != null) setState(() => downloading[m] = g / t);
-          });
+          await MediaResolver.ensureLocal(
+            m,
+            onProgress: (g, t) {
+              if (mounted && t != null) setState(() => downloading[m] = g / t);
+            },
+          );
           app.save();
           if (mounted) snack(context, 'נשמר במכשיר להאזנה ללא אינטרנט');
         } catch (e) {

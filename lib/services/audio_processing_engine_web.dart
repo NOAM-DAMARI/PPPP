@@ -1,12 +1,18 @@
-import 'dart:html' as html;
-import 'dart:js_util' as js_util;
+import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
 import 'dart:typed_data';
+
+@JS('window')
+external JSObject get _jsWindow;
 
 Future<bool> ffmpegAvailable() async {
   try {
-    final bridge = js_util.getProperty<Object>(html.window, 'lessonFfmpeg');
-    final promise = js_util.callMethod<Object>(bridge, 'available', const []);
-    return await js_util.promiseToFuture<bool>(promise);
+    final bridge = _jsWindow.getProperty<JSObject?>('lessonFfmpeg'.toJS);
+    if (bridge == null) return false;
+    final promise = bridge.callMethod<JSPromise<JSBoolean>?>('available'.toJS);
+    if (promise == null) return false;
+    final result = await promise.toDart;
+    return result.toDart;
   } catch (_) {
     return false;
   }
@@ -19,21 +25,36 @@ Future<Uint8List> runFfmpeg({
   required List<String> args,
 }) async {
   try {
-    final bridge = js_util.getProperty<Object>(html.window, 'lessonFfmpeg');
-    final promise = js_util.callMethod<Object>(bridge, 'run', [
-      input,
-      inputName,
-      outputName,
-      js_util.jsify(args),
-    ]);
-    final output = await js_util.promiseToFuture<Object>(promise);
-    final length = js_util.getProperty<int>(output, 'length');
+    final bridge = _jsWindow.getProperty<JSObject?>('lessonFfmpeg'.toJS);
+    if (bridge == null) {
+      throw StateError('lessonFfmpeg bridge is not available');
+    }
+
+    final jsArgs = args.map((a) => a.toJS).toList().toJS;
+    final promise = bridge.callMethod<JSPromise<JSAny>?>(
+      'run'.toJS,
+      input.toJS,
+      inputName.toJS,
+      outputName.toJS,
+      jsArgs,
+    );
+    if (promise == null) {
+      throw StateError('lessonFfmpeg.run returned null');
+    }
+
+    final output = await promise.toDart;
+    if (output is JSUint8Array) {
+      return output.toDart;
+    }
+
+    final outputObj = output as JSObject;
+    final lengthJs = outputObj.getProperty<JSNumber?>('length'.toJS);
+    final length = lengthJs?.toDartInt ?? 0;
     return Uint8List.fromList(
-      List<int>.generate(
-        length,
-        (index) => js_util.getProperty<int>(output, index),
-        growable: false,
-      ),
+      List<int>.generate(length, (index) {
+        final val = outputObj.getProperty<JSNumber?>(index.toString().toJS);
+        return val?.toDartInt ?? 0;
+      }, growable: false),
     );
   } catch (error) {
     throw Exception('עיבוד השמע נכשל: $error');

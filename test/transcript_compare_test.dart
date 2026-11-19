@@ -23,7 +23,14 @@ void main() {
 
   test('lesson keeps several transcripts through save/load', () {
     final l = Lesson(id: '1', title: 't')
-      ..transcripts = [TranscriptVersion(id: 'v1', providerId: 'groq', label: 'Groq', segs: [Seg(0, 'א')])];
+      ..transcripts = [
+        TranscriptVersion(
+          id: 'v1',
+          providerId: 'groq',
+          label: 'Groq',
+          segs: [Seg(0, 'א')],
+        ),
+      ];
     final back = Lesson.fromJson(jsonDecode(jsonEncode(l.toJson())) as Map);
     expect(back.transcripts.single.providerId, 'groq');
   });

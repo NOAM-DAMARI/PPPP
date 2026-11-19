@@ -11,30 +11,38 @@ Future<void> _openDialog(
   void Function(List<ZipImportSelection>?) onResult, {
   ZipImportTarget defaultTarget = ZipImportTarget.lesson,
 }) async {
-  await tester.pumpWidget(MaterialApp(
-    home: Builder(
+  await tester.pumpWidget(
+    MaterialApp(
+      home: Builder(
         builder: (context) => Scaffold(
-              body: Center(
-                child: FilledButton(
-                  onPressed: () async {
-                    onResult(await showDialog<List<ZipImportSelection>>(
-                      context: context,
-                      builder: (_) => ZipImportDialog(
-                          entries: entries, defaultTarget: defaultTarget),
-                    ));
-                  },
-                  child: const Text('פתח ZIP'),
-                ),
-              ),
-            )),
-  ));
+          body: Center(
+            child: FilledButton(
+              onPressed: () async {
+                onResult(
+                  await showDialog<List<ZipImportSelection>>(
+                    context: context,
+                    builder: (_) => ZipImportDialog(
+                      entries: entries,
+                      defaultTarget: defaultTarget,
+                    ),
+                  ),
+                );
+              },
+              child: const Text('פתח ZIP'),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
   await tester.tap(find.text('פתח ZIP'));
   await tester.pumpAndSettle();
 }
 
 void main() {
-  testWidgets('ZIP table edits lesson data and skips selected rows',
-      (tester) async {
+  testWidgets('ZIP table edits lesson data and skips selected rows', (
+    tester,
+  ) async {
     await tester.binding.setSurfaceSize(const Size(1200, 850));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
@@ -63,8 +71,9 @@ void main() {
       find.byKey(const ValueKey('zip-notes-audio/lesson.mp3')),
       'הערה לדוגמה',
     );
-    final kindDropdown =
-        find.byKey(const ValueKey('zip-kind-audio/lesson.mp3'));
+    final kindDropdown = find.byKey(
+      const ValueKey('zip-kind-audio/lesson.mp3'),
+    );
     await tester.ensureVisible(kindDropdown);
     await tester.pumpAndSettle();
     await tester.tap(kindDropdown);
@@ -103,15 +112,25 @@ void main() {
 
     const entries = [ZipEntry(path: 'songs/one.mp3', size: 256)];
     List<ZipImportSelection>? result;
-    await _openDialog(tester, entries, (value) => result = value,
-        defaultTarget: ZipImportTarget.song);
+    await _openDialog(
+      tester,
+      entries,
+      (value) => result = value,
+      defaultTarget: ZipImportTarget.song,
+    );
 
     await tester.enterText(
-        find.byKey(const ValueKey('zip-title-songs/one.mp3')), 'שיר לדוגמה');
+      find.byKey(const ValueKey('zip-title-songs/one.mp3')),
+      'שיר לדוגמה',
+    );
     await tester.enterText(
-        find.byKey(const ValueKey('zip-year-songs/one.mp3')), '1999');
+      find.byKey(const ValueKey('zip-year-songs/one.mp3')),
+      '1999',
+    );
     await tester.enterText(
-        find.byKey(const ValueKey('zip-location-songs/one.mp3')), 'ירושלים');
+      find.byKey(const ValueKey('zip-location-songs/one.mp3')),
+      'ירושלים',
+    );
     await tester.tap(find.text('ייבא 1 קבצים'));
     await tester.pumpAndSettle();
 

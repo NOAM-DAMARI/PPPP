@@ -10,26 +10,69 @@ import 'app_state.dart';
 import 'media_resolver.dart';
 import 'storage.dart';
 
-typedef _Cfg = ({TranscribeProvider provider, String key, String endpoint, String model});
+typedef _Cfg = ({
+  TranscribeProvider provider,
+  String key,
+  String endpoint,
+  String model,
+});
 
 class TranscribeProvider {
   final String id, label, endpoint, model, hint;
   final bool needsKey;
-  const TranscribeProvider(this.id, this.label, this.endpoint, this.model, this.needsKey, this.hint);
+  const TranscribeProvider(
+    this.id,
+    this.label,
+    this.endpoint,
+    this.model,
+    this.needsKey,
+    this.hint,
+  );
 }
 
 /// מנועי תמלול בענן (OpenAI / Soniox / Groq / שרת מותאם). השירות החינמי המובנה שנסגר הוסר.
 class Transcriber {
   static const providers = [
-    TranscribeProvider('soniox', 'Soniox בזמן אמת', 'wss://stt-rt.soniox.com/transcribe-websocket', 'stt-rt-v6',
-        true, 'תמלול WebSocket מהיר. נדרש API key מ־console.soniox.com.'),
-    TranscribeProvider('groq', 'Groq Whisper (מהיר מאוד)', 'https://api.groq.com/openai/v1/audio/transcriptions',
-        'whisper-large-v3', true, 'מפתח: console.groq.com ← API Keys'),
-    TranscribeProvider('openai', 'OpenAI Whisper', 'https://api.openai.com/v1/audio/transcriptions', 'whisper-1', true,
-        'מודל whisper-1 – מחזיר זמנים לכל קטע (מומלץ לכתוביות). מפתח: platform.openai.com ← API keys'),
-    TranscribeProvider('openai-gpt-transcribe', 'OpenAI GPT-4o Transcribe', 'https://api.openai.com/v1/audio/transcriptions', 'gpt-4o-transcribe', true,
-        'מודל OpenAI מדויק מאוד למילים (ללא זמנים לכל שורה – מומלץ whisper-1 כשצריך זמנים). דורש חשבון פעיל ומפתח API.'),
-    TranscribeProvider('custom', 'שרת מותאם אישית', '', 'whisper-1', false, 'כל שרת תואם OpenAI'),
+    TranscribeProvider(
+      'soniox',
+      'Soniox בזמן אמת',
+      'wss://stt-rt.soniox.com/transcribe-websocket',
+      'stt-rt-v6',
+      true,
+      'תמלול WebSocket מהיר. נדרש API key מ־console.soniox.com.',
+    ),
+    TranscribeProvider(
+      'groq',
+      'Groq Whisper (מהיר מאוד)',
+      'https://api.groq.com/openai/v1/audio/transcriptions',
+      'whisper-large-v3',
+      true,
+      'מפתח: console.groq.com ← API Keys',
+    ),
+    TranscribeProvider(
+      'openai',
+      'OpenAI Whisper',
+      'https://api.openai.com/v1/audio/transcriptions',
+      'whisper-1',
+      true,
+      'מודל whisper-1 – מחזיר זמנים לכל קטע (מומלץ לכתוביות). מפתח: platform.openai.com ← API keys',
+    ),
+    TranscribeProvider(
+      'openai-gpt-transcribe',
+      'OpenAI GPT-4o Transcribe',
+      'https://api.openai.com/v1/audio/transcriptions',
+      'gpt-4o-transcribe',
+      true,
+      'מודל OpenAI מדויק מאוד למילים (ללא זמנים לכל שורה – מומלץ whisper-1 כשצריך זמנים). דורש חשבון פעיל ומפתח API.',
+    ),
+    TranscribeProvider(
+      'custom',
+      'שרת מותאם אישית',
+      '',
+      'whisper-1',
+      false,
+      'כל שרת תואם OpenAI',
+    ),
   ];
 
   /// גודל כל חלק שנשלח לשרת (רוב השרתים מגבילים ל-25MB)
@@ -39,6 +82,7 @@ class Transcriber {
     final saved = app.prefs.getString('tr_provider');
     return providers.any((p) => p.id == saved) ? saved! : providers.first.id;
   }
+
   static TranscribeProvider get provider => providerById(providerId);
   static TranscribeProvider providerById(String id) =>
       providers.firstWhere((p) => p.id == id, orElse: () => providers.first);
@@ -47,21 +91,33 @@ class Transcriber {
   static String apiKeyFor(String id) {
     final own = app.prefs.getString('tr_key_$id') ?? '';
     if (own.isNotEmpty) return own;
-    if (id == 'openai-gpt-transcribe') return app.prefs.getString('tr_key_openai') ?? '';
-    if (id == 'openai') return app.prefs.getString('tr_key_openai-gpt-transcribe') ?? '';
+    if (id == 'openai-gpt-transcribe')
+      return app.prefs.getString('tr_key_openai') ?? '';
+    if (id == 'openai')
+      return app.prefs.getString('tr_key_openai-gpt-transcribe') ?? '';
     return '';
   }
 
-  static String endpointFor(String id) => id == 'custom' ? customEndpoint : providerById(id).endpoint;
+  static String endpointFor(String id) =>
+      id == 'custom' ? customEndpoint : providerById(id).endpoint;
   static String modelFor(String id) {
-    final saved = app.prefs.getString('tr_model_$id') ?? (id == 'custom' ? app.prefs.getString('tr_model') : null);
-    return (saved == null || saved.trim().isEmpty) ? providerById(id).model : saved;
+    final saved =
+        app.prefs.getString('tr_model_$id') ??
+        (id == 'custom' ? app.prefs.getString('tr_model') : null);
+    return (saved == null || saved.trim().isEmpty)
+        ? providerById(id).model
+        : saved;
   }
+
   static bool readyFor(String id) =>
-      endpointFor(id).isNotEmpty && (!providerById(id).needsKey || apiKeyFor(id).isNotEmpty);
+      endpointFor(id).isNotEmpty &&
+      (!providerById(id).needsKey || apiKeyFor(id).isNotEmpty);
 
   /// כל המנועים שמוגדרים ומוכנים לשימוש
-  static List<TranscribeProvider> get readyProviders => [for (final p in providers) if (readyFor(p.id)) p];
+  static List<TranscribeProvider> get readyProviders => [
+    for (final p in providers)
+      if (readyFor(p.id)) p,
+  ];
 
   /// הצעות מודל לכל מנוע (אפשר גם להקליד שם אחר)
   static const modelSuggestions = {
@@ -103,52 +159,121 @@ class Transcriber {
     final res = await http
         .get(uri, headers: {if (key.isNotEmpty) 'Authorization': 'Bearer $key'})
         .timeout(const Duration(seconds: 20));
-    if (res.statusCode == 401 || res.statusCode == 403) throw Exception('המפתח שגוי או שאין לו הרשאה (${res.statusCode})');
-    if (res.statusCode == 404) throw Exception('המודל "${modelFor(id)}" לא זמין בחשבון הזה (404)');
-    if (res.statusCode == 429) throw Exception(explain429(utf8.decode(res.bodyBytes, allowMalformed: true), res.headers, p.label));
+    if (res.statusCode == 401 || res.statusCode == 403)
+      throw Exception('המפתח שגוי או שאין לו הרשאה (${res.statusCode})');
+    if (res.statusCode == 404)
+      throw Exception('המודל "${modelFor(id)}" לא זמין בחשבון הזה (404)');
+    if (res.statusCode == 429)
+      throw Exception(
+        explain429(
+          utf8.decode(res.bodyBytes, allowMalformed: true),
+          res.headers,
+          p.label,
+        ),
+      );
     if (res.statusCode != 200) throw Exception('הספק החזיר ${res.statusCode}');
     if (id == 'openai' || id == 'openai-gpt-transcribe') {
       // רשימת המודלים עובדת גם בלי יתרה – לכן שולחים שנייה של שקט כדי לוודא שהחיוב פעיל
       final req = http.MultipartRequest('POST', Uri.parse(p.endpoint))
         ..headers['Authorization'] = 'Bearer $key'
         ..fields['model'] = modelFor(id)
-        ..files.add(http.MultipartFile.fromBytes('file', _silentWav(), filename: 'test.wav'));
-      final t = await http.Response.fromStream(await req.send().timeout(const Duration(seconds: 30)));
-      if (t.statusCode == 429) throw Exception(explain429(utf8.decode(t.bodyBytes, allowMalformed: true), t.headers, p.label));
-      if (t.statusCode == 401 || t.statusCode == 403) throw Exception('למפתח אין הרשאה לתמלול (${t.statusCode})');
-      if (t.statusCode >= 300 && t.statusCode != 400) throw Exception('בדיקת התמלול החזירה ${t.statusCode}');
+        ..files.add(
+          http.MultipartFile.fromBytes(
+            'file',
+            _silentWav(),
+            filename: 'test.wav',
+          ),
+        );
+      final t = await http.Response.fromStream(
+        await req.send().timeout(const Duration(seconds: 30)),
+      );
+      if (t.statusCode == 429)
+        throw Exception(
+          explain429(
+            utf8.decode(t.bodyBytes, allowMalformed: true),
+            t.headers,
+            p.label,
+          ),
+        );
+      if (t.statusCode == 401 || t.statusCode == 403)
+        throw Exception('למפתח אין הרשאה לתמלול (${t.statusCode})');
+      if (t.statusCode >= 300 && t.statusCode != 400)
+        throw Exception('בדיקת התמלול החזירה ${t.statusCode}');
       return 'החיבור תקין ✓ – המפתח פעיל, יש יתרה והמודל ${modelFor(id)} זמין';
     }
     return 'החיבור תקין ✓';
   }
 
-  static Future<List<Seg>> alignTextWithAI(String sourceText, List<Seg> transcript) async {
+  static Future<List<Seg>> alignTextWithAI(
+    String sourceText,
+    List<Seg> transcript,
+  ) async {
     if (apiKey.isEmpty) throw Exception('נדרש מפתח API בתפריט התמלול');
     final endpointBase = provider.id == 'groq'
         ? 'https://api.groq.com/openai/v1/chat/completions'
         : 'https://api.openai.com/v1/chat/completions';
     final payload = {
-      'model': provider.id == 'groq' ? 'llama-3.3-70b-versatile' : 'gpt-4o-mini',
+      'model': provider.id == 'groq'
+          ? 'llama-3.3-70b-versatile'
+          : 'gpt-4o-mini',
       'temperature': 0,
       'response_format': {'type': 'json_object'},
       'messages': [
-        {'role': 'system', 'content': 'You align Hebrew text lines to transcript timestamps. Return JSON only: {"segments":[{"ms":number,"text":string}]}. Preserve every source line in order. Use the nearest matching transcript timestamp; do not invent timestamps.'},
-        {'role': 'user', 'content': jsonEncode({'source_lines': sourceText.split(RegExp(r'\r?\n')).where((x) => x.trim().isNotEmpty).toList(), 'transcript': transcript.map((s) => {'ms': s.ms, 'text': s.text}).toList()})},
+        {
+          'role': 'system',
+          'content':
+              'You align Hebrew text lines to transcript timestamps. Return JSON only: {"segments":[{"ms":number,"text":string}]}. Preserve every source line in order. Use the nearest matching transcript timestamp; do not invent timestamps.',
+        },
+        {
+          'role': 'user',
+          'content': jsonEncode({
+            'source_lines': sourceText
+                .split(RegExp(r'\r?\n'))
+                .where((x) => x.trim().isNotEmpty)
+                .toList(),
+            'transcript': transcript
+                .map((s) => {'ms': s.ms, 'text': s.text})
+                .toList(),
+          }),
+        },
       ],
     };
-    final response = await http.post(Uri.parse(endpointBase), headers: {
-      'Authorization': 'Bearer $apiKey',
-      'Content-Type': 'application/json',
-    }, body: jsonEncode(payload)).timeout(const Duration(minutes: 3));
+    final response = await http
+        .post(
+          Uri.parse(endpointBase),
+          headers: {
+            'Authorization': 'Bearer $apiKey',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode(payload),
+        )
+        .timeout(const Duration(minutes: 3));
     if (response.statusCode == 429) {
-      throw Exception(explain429(utf8.decode(response.bodyBytes, allowMalformed: true), response.headers, provider.label));
+      throw Exception(
+        explain429(
+          utf8.decode(response.bodyBytes, allowMalformed: true),
+          response.headers,
+          provider.label,
+        ),
+      );
     }
-    if (response.statusCode < 200 || response.statusCode >= 300) throw Exception('AI התאמת הטקסט נכשלה (${response.statusCode})');
+    if (response.statusCode < 200 || response.statusCode >= 300)
+      throw Exception('AI התאמת הטקסט נכשלה (${response.statusCode})');
     final body = jsonDecode(response.body) as Map<String, dynamic>;
-    final content = body['choices']?[0]?['message']?['content']?.toString() ?? '';
+    final content =
+        body['choices']?[0]?['message']?['content']?.toString() ?? '';
     final decoded = jsonDecode(content) as Map<String, dynamic>;
     final rows = decoded['segments'] as List<dynamic>? ?? const [];
-    return rows.whereType<Map>().map((row) => Seg((row['ms'] as num?)?.round() ?? 0, row['text']?.toString() ?? '')).where((s) => s.text.trim().isNotEmpty).toList();
+    return rows
+        .whereType<Map>()
+        .map(
+          (row) => Seg(
+            (row['ms'] as num?)?.round() ?? 0,
+            row['text']?.toString() ?? '',
+          ),
+        )
+        .where((s) => s.text.trim().isNotEmpty)
+        .toList();
   }
 
   static Future<void> configure({
@@ -160,14 +285,21 @@ class Transcriber {
     bool makeDefault = true,
   }) async {
     if (makeDefault) await app.prefs.setString('tr_provider', providerId);
-    if (key != null) await app.prefs.setString('tr_key_$providerId', key.trim());
-    if (endpoint != null) await app.prefs.setString('tr_endpoint', endpoint.trim());
-    if (model != null) await app.prefs.setString('tr_model_$providerId', model.trim());
+    if (key != null)
+      await app.prefs.setString('tr_key_$providerId', key.trim());
+    if (endpoint != null)
+      await app.prefs.setString('tr_endpoint', endpoint.trim());
+    if (model != null)
+      await app.prefs.setString('tr_model_$providerId', model.trim());
     if (language != null) await app.prefs.setString('tr_lang', language);
   }
 
   /// מתמלל קובץ שמע. קבצי MP3 גדולים נחתכים אוטומטית לחלקים.
-  static Future<List<Seg>> transcribe(MediaFields m, {void Function(String status)? onStatus, String? providerId}) async {
+  static Future<List<Seg>> transcribe(
+    MediaFields m, {
+    void Function(String status)? onStatus,
+    String? providerId,
+  }) async {
     final id = providerId ?? Transcriber.providerId;
     final cfg = (
       provider: providerById(id),
@@ -175,7 +307,10 @@ class Transcriber {
       endpoint: endpointFor(id),
       model: modelFor(id),
     );
-    if (!readyFor(id)) throw Exception('המנוע "${cfg.provider.label}" לא מחובר – יש להזין מפתח API בהגדרות ← תמלול');
+    if (!readyFor(id))
+      throw Exception(
+        'המנוע "${cfg.provider.label}" לא מחובר – יש להזין מפתח API בהגדרות ← תמלול',
+      );
     final name = m.fileName ?? 'audio.mp3';
     final ext = name.contains('.') ? name.split('.').last.toLowerCase() : 'mp3';
 
@@ -184,15 +319,20 @@ class Transcriber {
     List<int>? bytes;
     if (kIsWeb) {
       final url = m.remoteUrl;
-      if (url == null) throw Exception('בדפדפן אפשר לתמלל רק קבצים שהועלו ל-GitHub');
+      if (url == null)
+        throw Exception('בדפדפן אפשר לתמלל רק קבצים שהועלו ל-GitHub');
       onStatus?.call('מוריד את הקובץ...');
       final r = await http.get(Uri.parse(url));
-      if (r.statusCode != 200) throw Exception('הורדת הקובץ נכשלה (${r.statusCode})');
+      if (r.statusCode != 200)
+        throw Exception('הורדת הקובץ נכשלה (${r.statusCode})');
       bytes = r.bodyBytes;
     } else {
-      path = await MediaResolver.ensureLocal(m, onProgress: (g, t) {
-        if (t != null) onStatus?.call('מוריד את הקובץ... ${(g * 100 ~/ t)}%');
-      });
+      path = await MediaResolver.ensureLocal(
+        m,
+        onProgress: (g, t) {
+          if (t != null) onStatus?.call('מוריד את הקובץ... ${(g * 100 ~/ t)}%');
+        },
+      );
       if (path == null) throw Exception('לא נמצא קובץ שמע');
     }
     final size = bytes?.length ?? localFileSize(path) ?? 0;
@@ -213,8 +353,10 @@ class Transcriber {
     }
 
     if (ext != 'mp3') {
-      throw Exception('קבצים מעל 20MB נתמכים לתמלול בפורמט MP3 בלבד. '
-          'המר את הקובץ ל-MP3 (למשל באפליקציה חינמית) ונסה שוב.');
+      throw Exception(
+        'קבצים מעל 20MB נתמכים לתמלול בפורמט MP3 בלבד. '
+        'המר את הקובץ ל-MP3 (למשל באפליקציה חינמית) ונסה שוב.',
+      );
     }
 
     final head = await range(0, size < 65536 ? size : 65536);
@@ -236,7 +378,9 @@ class Transcriber {
       final chunk = await range(start, end);
       final r = await _send(cfg, chunk, 'part$part.mp3');
       out.addAll(r.segs.map((s) => Seg(s.ms + offsetMs, s.text)));
-      final estimated = header != null && header.bitrate > 0 ? (chunk.length * 8 * 1000 / header.bitrate).round() : 0;
+      final estimated = header != null && header.bitrate > 0
+          ? (chunk.length * 8 * 1000 / header.bitrate).round()
+          : 0;
       offsetMs += r.durationMs ?? estimated;
       start = end;
       part++;
@@ -258,12 +402,14 @@ class Transcriber {
     var lastMs = 0;
     try {
       await socket.ready;
-      socket.sink.add(jsonEncode({
-        'model': cfg.model,
-        'audio_format': 'auto',
-        'language_hints': [language],
-        'enable_endpoint_detection': true,
-      }));
+      socket.sink.add(
+        jsonEncode({
+          'model': cfg.model,
+          'audio_format': 'auto',
+          'language_hints': [language],
+          'enable_endpoint_detection': true,
+        }),
+      );
 
       const frameBytes = 256 * 1024;
       var sent = 0;
@@ -275,7 +421,9 @@ class Transcriber {
       }
       socket.sink.add('');
 
-      await for (final message in socket.stream.timeout(const Duration(minutes: 15))) {
+      await for (final message in socket.stream.timeout(
+        const Duration(minutes: 15),
+      )) {
         if (message is! String || message.isEmpty) continue;
         final decoded = jsonDecode(message);
         if (decoded is! Map) continue;
@@ -287,13 +435,16 @@ class Transcriber {
         final tokens = decoded['tokens'];
         if (tokens is List) {
           for (final token in tokens) {
-            if (token is! Map || token['translation_status'] == 'translation') continue;
-            if (token['is_final'] == false) continue; // רק טוקנים סופיים – אחרת יש כפילויות
+            if (token is! Map || token['translation_status'] == 'translation')
+              continue;
+            if (token['is_final'] == false)
+              continue; // רק טוקנים סופיים – אחרת יש כפילויות
             final text = token['text']?.toString() ?? '';
             if (text.isEmpty || text == '<end>') continue;
             final ms = (token['start_ms'] as num?)?.round() ?? 0;
             // Soniox מחזיר חלקי מילים – מאחדים למשפטים: סוף משפט, הפסקה או שורה ארוכה
-            final startNew = segments.isEmpty ||
+            final startNew =
+                segments.isEmpty ||
                 RegExp(r'[.?!:]\s*$').hasMatch(segments.last.text) ||
                 ms - lastMs > 1500 ||
                 (segments.last.text.length > 120 && text.startsWith(' '));
@@ -320,7 +471,8 @@ class Transcriber {
   static List<int> _silentWav() {
     const rate = 8000, n = 8000;
     final b = BytesBuilder();
-    void u32(int v) => b.add([v & 255, (v >> 8) & 255, (v >> 16) & 255, (v >> 24) & 255]);
+    void u32(int v) =>
+        b.add([v & 255, (v >> 8) & 255, (v >> 16) & 255, (v >> 24) & 255]);
     void u16(int v) => b.add([v & 255, (v >> 8) & 255]);
     b.add('RIFF'.codeUnits);
     u32(36 + n * 2);
@@ -339,7 +491,11 @@ class Transcriber {
   }
 
   /// הסבר ברור בעברית לשגיאת 429 – מבחין בין חוסר יתרה, מגבלת הוצאה ועומס בקשות
-  static String explain429(String body, Map<String, String> headers, String providerLabel) {
+  static String explain429(
+    String body,
+    Map<String, String> headers,
+    String providerLabel,
+  ) {
     String code = '', type = '', message = '';
     try {
       final j = jsonDecode(body);
@@ -351,17 +507,25 @@ class Transcriber {
       }
     } catch (_) {}
     final all = '$code $type $message $body'.toLowerCase();
-    if (all.contains('billing_hard_limit') || all.contains('hard limit') || all.contains('spend limit') ||
-        all.contains('budget') || all.contains('usage limit')) {
+    if (all.contains('billing_hard_limit') ||
+        all.contains('hard limit') ||
+        all.contains('spend limit') ||
+        all.contains('budget') ||
+        all.contains('usage limit')) {
       return 'שגיאה 429 – הגעת למגבלת ההוצאה החודשית שהוגדרה בחשבון ($providerLabel). '
           'יש להיכנס ל-platform.openai.com ← Settings ← Limits ולהעלות את המגבלה (Monthly budget), ואז לנסות שוב.';
     }
-    if (all.contains('insufficient_quota') || all.contains('exceeded your current quota') || all.contains('credit')) {
+    if (all.contains('insufficient_quota') ||
+        all.contains('exceeded your current quota') ||
+        all.contains('credit')) {
       return 'שגיאה 429 – אין יתרה בחשבון ($providerLabel, insufficient_quota). '
           'ה-API עובד רק עם יתרה בתשלום מראש: platform.openai.com ← Settings ← Billing ← Add credit. '
           'מנוי ChatGPT Plus אינו כולל שימוש ב-API. אחרי טעינת יתרה ייתכן שיידרשו כמה דקות.';
     }
-    final retry = headers['retry-after'] ?? headers['x-ratelimit-reset-requests'] ?? headers['x-ratelimit-reset-tokens'];
+    final retry =
+        headers['retry-after'] ??
+        headers['x-ratelimit-reset-requests'] ??
+        headers['x-ratelimit-reset-tokens'];
     final kind = all.contains('tokens') ? 'טוקנים' : 'בקשות';
     return 'שגיאה 429 – עומס: נשלחו יותר מדי $kind בזמן קצר ($providerLabel). '
         '${retry != null ? 'אפשר לנסות שוב בעוד $retry. ' : 'המתן דקה ונסה שוב. '}'
@@ -373,30 +537,52 @@ class Transcriber {
       return 'אין יתרה או שהחיוב אצל ספק התמלול חסום (402). הוסף כספים או הפעל חיוב אוטומטי בחשבון הספק.';
     }
     if (code == '429') return explain429(detail, const {}, 'Soniox');
-    if (code == '401' || code == '403') return 'מפתח התמלול שגוי או שאין לו הרשאה.';
+    if (code == '401' || code == '403')
+      return 'מפתח התמלול שגוי או שאין לו הרשאה.';
     return 'Soniox החזיר שגיאה $code: $detail';
   }
 
-  static Future<({List<Seg> segs, int? durationMs})> _send(_Cfg cfg, List<int> bytes, String filename) async {
+  static Future<({List<Seg> segs, int? durationMs})> _send(
+    _Cfg cfg,
+    List<int> bytes,
+    String filename,
+  ) async {
     Future<http.Response> post(String format) async {
       final req = http.MultipartRequest('POST', Uri.parse(cfg.endpoint));
-      if (cfg.key.isNotEmpty) req.headers['Authorization'] = 'Bearer ${cfg.key}';
-      req.files.add(http.MultipartFile.fromBytes('file', bytes, filename: filename));
+      if (cfg.key.isNotEmpty)
+        req.headers['Authorization'] = 'Bearer ${cfg.key}';
+      req.files.add(
+        http.MultipartFile.fromBytes('file', bytes, filename: filename),
+      );
       req.fields['model'] = cfg.model;
       req.fields['response_format'] = format;
       if (language.isNotEmpty) req.fields['language'] = language;
-      return http.Response.fromStream(await req.send().timeout(const Duration(minutes: 10)));
+      return http.Response.fromStream(
+        await req.send().timeout(const Duration(minutes: 10)),
+      );
     }
 
     final verbose = !cfg.model.startsWith('gpt-');
     var res = await post(verbose ? 'verbose_json' : 'json');
-    if (res.statusCode == 400 || res.statusCode == 422) res = await post('json');
-    if (res.statusCode == 401 || res.statusCode == 403) throw Exception('מפתח ה-API שגוי, חסר או שאין לו הרשאה לתמלול');
-    if (res.statusCode == 402) throw Exception('החיוב של ספק התמלול חסום או שאין יתרה בחשבון. יש להוסיף אמצעי תשלום/יתרה בלוח הבקרה של הספק.');
+    if (res.statusCode == 400 || res.statusCode == 422)
+      res = await post('json');
+    if (res.statusCode == 401 || res.statusCode == 403)
+      throw Exception('מפתח ה-API שגוי, חסר או שאין לו הרשאה לתמלול');
+    if (res.statusCode == 402)
+      throw Exception(
+        'החיוב של ספק התמלול חסום או שאין יתרה בחשבון. יש להוסיף אמצעי תשלום/יתרה בלוח הבקרה של הספק.',
+      );
     if (res.statusCode == 429) {
-      throw Exception(explain429(utf8.decode(res.bodyBytes, allowMalformed: true), res.headers, cfg.provider.label));
+      throw Exception(
+        explain429(
+          utf8.decode(res.bodyBytes, allowMalformed: true),
+          res.headers,
+          cfg.provider.label,
+        ),
+      );
     }
-    if (res.statusCode == 413) throw Exception('השרת דחה את הקובץ כי הוא גדול מדי');
+    if (res.statusCode == 413)
+      throw Exception('השרת דחה את הקובץ כי הוא גדול מדי');
     if (res.statusCode < 200 || res.statusCode >= 300) {
       throw Exception('שירות התמלול החזיר שגיאה ${res.statusCode}');
     }
@@ -405,13 +591,18 @@ class Transcriber {
     final decoded = jsonDecode(body);
     if (decoded is! Map) return (segs: [Seg(0, body.trim())], durationMs: null);
 
-    final durationMs = decoded['duration'] is num ? ((decoded['duration'] as num) * 1000).round() : null;
+    final durationMs = decoded['duration'] is num
+        ? ((decoded['duration'] as num) * 1000).round()
+        : null;
     final segments = decoded['segments'];
     if (segments is List && segments.isNotEmpty) {
       final segs = <Seg>[
         for (final s in segments)
           if ((s['text'] ?? '').toString().trim().isNotEmpty)
-            Seg((((s['start'] as num?) ?? 0) * 1000).round(), s['text'].toString().trim()),
+            Seg(
+              (((s['start'] as num?) ?? 0) * 1000).round(),
+              s['text'].toString().trim(),
+            ),
       ];
       return (segs: segs, durationMs: durationMs);
     }

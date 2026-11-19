@@ -17,9 +17,10 @@ Widget avatar(Singer? s, {double r = 22}) {
         ? Text(
             s?.name.isNotEmpty == true ? s!.name[0] : '?',
             style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
-                fontSize: r * .8),
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+              fontSize: r * .8,
+            ),
           )
         : null,
   );
@@ -32,8 +33,9 @@ Future<bool> confirm(BuildContext c, String msg, {String ok = 'מחיקה'}) asy
         content: Text(msg),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('ביטול')),
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('ביטול'),
+          ),
           FilledButton(
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(ctx).colorScheme.error,
@@ -75,8 +77,12 @@ String fmtBytes(int? b) {
   return '${(b / 1024 / 1024 / 1024).toStringAsFixed(2)} GB';
 }
 
-Future<String?> askText(BuildContext c, String title,
-    {String init = '', int lines = 1}) async {
+Future<String?> askText(
+  BuildContext c,
+  String title, {
+  String init = '',
+  int lines = 1,
+}) async {
   final ctl = TextEditingController(text: init);
   final res = await showDialog<String>(
     context: c,
@@ -85,15 +91,23 @@ Future<String?> askText(BuildContext c, String title,
       content: SizedBox(
         width: 420,
         child: TextField(
-            controller: ctl, autofocus: true, maxLines: lines, minLines: 1),
+          controller: ctl,
+          autofocus: true,
+          maxLines: lines,
+          minLines: 1,
+        ),
       ),
       actions: [
         TextButton(
-            onPressed: () => Navigator.pop(ctx), child: const Text('ביטול')),
+          onPressed: () => Navigator.pop(ctx),
+          child: const Text('ביטול'),
+        ),
         FilledButton(
           style: FilledButton.styleFrom(minimumSize: const Size(0, 40)),
           onPressed: () => Navigator.pop(
-              ctx, ctl.text.trim().isEmpty ? null : ctl.text.trim()),
+            ctx,
+            ctl.text.trim().isEmpty ? null : ctl.text.trim(),
+          ),
           child: const Text('אישור'),
         ),
       ],
@@ -123,25 +137,28 @@ Future<T> runWithProgress<T>(
           builder: (_, v, __) {
             final ratio = v == null || v.$2 == 0 ? null : v.$1 / v.$2;
             return Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: LinearProgressIndicator(value: ratio, minHeight: 8),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    v == null || ratio == null
-                        ? 'מתחיל...'
-                        : '${(ratio * 100).toStringAsFixed(0)}%  ·  ${fmtBytes(v.$1)} מתוך ${fmtBytes(v.$2)}',
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 4),
-                  Text('אפשר להמשיך להשתמש בטלפון, אך אין לסגור את האפליקציה',
-                      textAlign: TextAlign.center,
-                      style: Theme.of(ctx).textTheme.bodySmall),
-                ]);
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: LinearProgressIndicator(value: ratio, minHeight: 8),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  v == null || ratio == null
+                      ? 'מתחיל...'
+                      : '${(ratio * 100).toStringAsFixed(0)}%  ·  ${fmtBytes(v.$1)} מתוך ${fmtBytes(v.$2)}',
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'אפשר להמשיך להשתמש בטלפון, אך אין לסגור את האפליקציה',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(ctx).textTheme.bodySmall,
+                ),
+              ],
+            );
           },
         ),
       ),
@@ -167,8 +184,8 @@ String lessonDateLabel(Lesson l) =>
 
 /// כותרת משנה לשיעור: מספר · פרשה · תאריך
 String lessonMeta(Lesson l) => [
-      if (l.number != null) '#${l.number}',
-      if (l.parasha.isNotEmpty)
-        '${l.parashaKind == 'event' ? 'אירוע' : 'פרשת'} ${l.parasha}',
-      lessonDateLabel(l),
-    ].join(' · ');
+  if (l.number != null) '#${l.number}',
+  if (l.parasha.isNotEmpty)
+    '${l.parashaKind == 'event' ? 'אירוע' : 'פרשת'} ${l.parasha}',
+  lessonDateLabel(l),
+].join(' · ');

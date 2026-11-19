@@ -35,12 +35,14 @@ class MediaResolver {
   /// כותרות להזרמה ישירה (מאגר פרטי ב-raw.githubusercontent)
   static Map<String, String>? streamHeaders(String url) =>
       url.contains('raw.githubusercontent.com') && app.githubToken.isNotEmpty
-          ? {'Authorization': 'Bearer ${app.githubToken}'}
-          : null;
+      ? {'Authorization': 'Bearer ${app.githubToken}'}
+      : null;
 
   /// מוריד למטמון (אם צריך) ומחזיר נתיב מקומי. בדפדפן מחזיר null.
-  static Future<String?> ensureLocal(MediaFields m,
-      {void Function(int received, int? total)? onProgress}) async {
+  static Future<String?> ensureLocal(
+    MediaFields m, {
+    void Function(int received, int? total)? onProgress,
+  }) async {
     final local = availableLocally(m);
     if (local != null) return local;
     if (kIsWeb) return null;

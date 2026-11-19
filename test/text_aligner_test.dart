@@ -5,7 +5,11 @@ import 'package:music_manager/services/text_aligner.dart';
 
 void main() {
   test('alignment keeps every letter of the source text', () {
-    final transcript = [Seg(0, 'שלום לכם חברים'), Seg(5000, 'היום נלמד על שבת'), Seg(12000, 'וזה סוף השיעור')];
+    final transcript = [
+      Seg(0, 'שלום לכם חברים'),
+      Seg(5000, 'היום נלמד על שבת'),
+      Seg(12000, 'וזה סוף השיעור'),
+    ];
     const text = 'שָׁלוֹם לָכֶם, חברים!\nהיום נלמד על שבת.\nוזה סוף השיעור';
     final out = TextAligner.align(text, transcript);
     expect(out.map((e) => e.text).join('\n'), text);
@@ -30,6 +34,14 @@ void main() {
     l.updatePoint(i, endMs: 0);
     expect(l.pointEnd(i), 1000 + 5 * 60 * 1000);
     l.removePoint(i);
-    expect([l.points.length, l.pointNotes.length, l.pointTimes.length, l.pointEnds.length], [0, 0, 0, 0]);
+    expect(
+      [
+        l.points.length,
+        l.pointNotes.length,
+        l.pointTimes.length,
+        l.pointEnds.length,
+      ],
+      [0, 0, 0, 0],
+    );
   });
 }

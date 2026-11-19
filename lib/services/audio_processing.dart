@@ -1,10 +1,9 @@
-import 'dart:typed_data';
-
 import 'package:flutter/foundation.dart';
 
 import 'audio_processing_engine_stub.dart'
     if (dart.library.js_interop) 'audio_processing_engine_web.dart'
-    if (dart.library.io) 'audio_processing_engine_io.dart' as engine;
+    if (dart.library.io) 'audio_processing_engine_io.dart'
+    as engine;
 
 /// עיבוד שמע (חיתוך + הפחתת רעש) עם FFmpeg.
 /// בדפדפן: ffmpeg.wasm (נטען לפי דרישה). במחשב: קובץ ffmpeg מותקן במערכת.
@@ -28,27 +27,44 @@ class AudioProcessingService {
     }
     if (!await engine.ffmpegAvailable()) {
       throw Exception(
-          'FFmpeg לא זמין במכשיר הזה. במחשב יש להתקין ffmpeg; בדפדפן נדרש חיבור לאינטרנט.');
+        'FFmpeg לא זמין במכשיר הזה. במחשב יש להתקין ffmpeg; בדפדפן נדרש חיבור לאינטרנט.',
+      );
     }
     final ext = _extension(sourceName);
     final args = <String>[
-      '-hide_banner', '-y',
-      '-i', 'input.$ext',
-      '-ss', startSeconds.toStringAsFixed(3),
-      '-t', (endSeconds - startSeconds).toStringAsFixed(3),
+      '-hide_banner',
+      '-y',
+      '-i',
+      'input.$ext',
+      '-ss',
+      startSeconds.toStringAsFixed(3),
+      '-t',
+      (endSeconds - startSeconds).toStringAsFixed(3),
       if (reduceNoise) ...[
         '-af',
         'afftdn=nr=${noiseReductionDb.clamp(0.0, 30.0).toDouble().toStringAsFixed(1)}:nf=-25:tn=1',
       ],
-      '-vn', '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart',
+      '-vn',
+      '-c:a',
+      'aac',
+      '-b:a',
+      '192k',
+      '-movflags',
+      '+faststart',
       'output.m4a',
     ];
     return engine.runFfmpeg(
-        input: sourceBytes, inputName: 'input.$ext', outputName: 'output.m4a', args: args);
+      input: sourceBytes,
+      inputName: 'input.$ext',
+      outputName: 'output.m4a',
+      args: args,
+    );
   }
 
   static String _extension(String name) {
     final ext = name.split('.').last.toLowerCase();
-    return const {'mp3', 'm4a', 'aac', 'wav', 'flac', 'ogg'}.contains(ext) ? ext : 'mp3';
+    return const {'mp3', 'm4a', 'aac', 'wav', 'flac', 'ogg'}.contains(ext)
+        ? ext
+        : 'mp3';
   }
 }

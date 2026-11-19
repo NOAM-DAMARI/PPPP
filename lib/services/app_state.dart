@@ -78,13 +78,15 @@ class AppState extends ChangeNotifier {
       'https://raw.githubusercontent.com/$githubOwner/$githubRepo/$githubBranch/$path';
 
   Map<String, String> get githubHeaders => {
-        'Accept': 'application/vnd.github+json',
-        'Authorization': 'Bearer $githubToken',
-        'X-GitHub-Api-Version': '2022-11-28',
-      };
+    'Accept': 'application/vnd.github+json',
+    'Authorization': 'Bearer $githubToken',
+    'X-GitHub-Api-Version': '2022-11-28',
+  };
 
-  Map<String, String> get _headers =>
-      {...githubHeaders, 'Content-Type': 'application/json'};
+  Map<String, String> get _headers => {
+    ...githubHeaders,
+    'Content-Type': 'application/json',
+  };
 
   Future<void> load() async {
     _p = await SharedPreferences.getInstance();
@@ -98,9 +100,13 @@ class AppState extends ChangeNotifier {
     githubEnabled = _p.getBool('githubEnabled') ?? false;
     localFolder = _p.getString('localFolder') ?? '';
     final savedMode = _p.getString('storageMode');
-    final legacyDriveMode =
-        const {'drive', 'localDrive', 'githubDrive'}.contains(savedMode);
-    final needsLocalFallback = savedMode == null ||
+    final legacyDriveMode = const {
+      'drive',
+      'localDrive',
+      'githubDrive',
+    }.contains(savedMode);
+    final needsLocalFallback =
+        savedMode == null ||
         savedMode == 'localDrive' ||
         (savedMode == 'drive' && !githubEnabled) ||
         (savedMode == 'githubDrive' && !githubEnabled);
@@ -128,7 +134,8 @@ class AppState extends ChangeNotifier {
     await _p.remove('driveImportedFileIds');
     await _p.remove('mirrorFolder');
     _dirty = _p.getBool('dirty') ?? false;
-    _dataUpdatedAt = DateTime.tryParse(_p.getString('dataUpdatedAt') ?? '') ??
+    _dataUpdatedAt =
+        DateTime.tryParse(_p.getString('dataUpdatedAt') ?? '') ??
         _dataUpdatedAt;
 
     final raw = _p.getString('data');
@@ -157,28 +164,30 @@ class AppState extends ChangeNotifier {
   }
 
   String export({bool includeSettings = false}) => jsonEncode({
-        if (includeSettings) 'settings': exportSettings(),
-        'singers': singers,
-        'songs': songs,
-        'lessons': lessons,
-        'playlists': playlists,
-        'customParashot': customParashot,
-        'unassignedMedia': unassignedMedia,
-        'importedLessonInfo': {
-          for (final entry in importedLessonInfo.entries)
-            entry.key: entry.value.toJson()
-        },
-        '_updatedAt': _dataUpdatedAt.toUtc().toIso8601String(),
-      });
+    if (includeSettings) 'settings': exportSettings(),
+    'singers': singers,
+    'songs': songs,
+    'lessons': lessons,
+    'playlists': playlists,
+    'customParashot': customParashot,
+    'unassignedMedia': unassignedMedia,
+    'importedLessonInfo': {
+      for (final entry in importedLessonInfo.entries)
+        entry.key: entry.value.toJson(),
+    },
+    '_updatedAt': _dataUpdatedAt.toUtc().toIso8601String(),
+  });
 
   void restore(String raw) {
     final d = jsonDecode(raw);
 
-    singers =
-        (d['singers'] as List? ?? []).map((e) => Singer.fromJson(e)).toList();
+    singers = (d['singers'] as List? ?? [])
+        .map((e) => Singer.fromJson(e))
+        .toList();
     songs = (d['songs'] as List? ?? []).map((e) => Song.fromJson(e)).toList();
-    lessons =
-        (d['lessons'] as List? ?? []).map((e) => Lesson.fromJson(e)).toList();
+    lessons = (d['lessons'] as List? ?? [])
+        .map((e) => Lesson.fromJson(e))
+        .toList();
     playlists = (d['playlists'] as List? ?? [])
         .map((e) => Playlist.fromJson(e))
         .toList();
@@ -188,8 +197,12 @@ class AppState extends ChangeNotifier {
         .toList();
     final savedInfo = d['importedLessonInfo'];
     importedLessonInfo = savedInfo is Map
-        ? savedInfo.map((key, value) =>
-            MapEntry(key.toString(), LessonImportInfo.fromJson(value as Map)))
+        ? savedInfo.map(
+            (key, value) => MapEntry(
+              key.toString(),
+              LessonImportInfo.fromJson(value as Map),
+            ),
+          )
         : <String, LessonImportInfo>{};
     final updatedAt = DateTime.tryParse(d['_updatedAt']?.toString() ?? '');
     if (updatedAt != null) {
@@ -239,7 +252,9 @@ class AppState extends ChangeNotifier {
       try {
         await _p.setString('data', raw);
         await _p.setString(
-            'dataUpdatedAt', _dataUpdatedAt.toUtc().toIso8601String());
+          'dataUpdatedAt',
+          _dataUpdatedAt.toUtc().toIso8601String(),
+        );
       } catch (e) {
         debugPrint('preferences save failed: $e');
       }
@@ -449,12 +464,11 @@ class AppState extends ChangeNotifier {
 
   /// נתיבים/שמות של קבצים שכבר משויכים לשיעור או לשיר
   Set<String> get _usedFileKeys => {
-        for (final m in [...songs, ...lessons]) ...[
-          if (m.filePath != null)
-            m.filePath!.replaceAll('\\', '/').toLowerCase(),
-          if (m.fileName != null) m.fileName!.toLowerCase(),
-        ],
-      };
+    for (final m in [...songs, ...lessons]) ...[
+      if (m.filePath != null) m.filePath!.replaceAll('\\', '/').toLowerCase(),
+      if (m.fileName != null) m.fileName!.toLowerCase(),
+    ],
+  };
 
   Future<void> addCustomParasha(String name) => addCustomParashot([name]);
 
@@ -464,7 +478,9 @@ class AppState extends ChangeNotifier {
       final value = name.trim();
       if (value.isEmpty ||
           customParashot.any(
-              (item) => item.toLowerCase() == value.toLowerCase())) continue;
+            (item) => item.toLowerCase() == value.toLowerCase(),
+          ))
+        continue;
       customParashot.add(value);
       changed = true;
     }
@@ -512,8 +528,9 @@ class AppState extends ChangeNotifier {
   }
 
   /// קבצי מדיה בתיקייה המקומית שעדיין לא שויכו לשיעור או לשיר.
-  Future<List<FreeFile>> freeMediaFiles(
-      {List<String> extensions = importExts}) async {
+  Future<List<FreeFile>> freeMediaFiles({
+    List<String> extensions = importExts,
+  }) async {
     if (!localEnabled) return const [];
     final used = _usedFileKeys;
     final all = await listMediaFiles(localFolder, extensions);
@@ -523,21 +540,22 @@ class AppState extends ChangeNotifier {
             !used.contains(f.name.toLowerCase()) &&
             // עותקים שהאפליקציה יצרה נשמרים בשם <timestamp>_<name>
             !used.contains(
-                f.name.replaceFirst(RegExp(r'^\d{10,}_'), '').toLowerCase()))
+              f.name.replaceFirst(RegExp(r'^\d{10,}_'), '').toLowerCase(),
+            ))
           f,
     ];
   }
 
   List<StorageProvider> _activeStorageProviders() => [
-        if (githubReady)
-          GitHubJsonStorageProvider(
-            owner: githubOwner,
-            repository: githubRepo,
-            branch: githubBranch,
-            token: githubToken,
-          ),
-        if (localEnabled) LocalJsonStorageProvider(localFolder),
-      ];
+    if (githubReady)
+      GitHubJsonStorageProvider(
+        owner: githubOwner,
+        repository: githubRepo,
+        branch: githubBranch,
+        token: githubToken,
+      ),
+    if (localEnabled) LocalJsonStorageProvider(localFolder),
+  ];
 
   Future<void> syncNow() async {
     final providers = _activeStorageProviders();
@@ -556,7 +574,8 @@ class AppState extends ChangeNotifier {
 
     try {
       final currentData = export();
-      final currentHasData = singers.isNotEmpty ||
+      final currentHasData =
+          singers.isNotEmpty ||
           songs.isNotEmpty ||
           lessons.isNotEmpty ||
           playlists.isNotEmpty ||
@@ -567,28 +586,37 @@ class AppState extends ChangeNotifier {
       if (_dirty ||
           _dataUpdatedAt.millisecondsSinceEpoch > 0 ||
           currentHasData) {
-        latest =
-            StorageSnapshot(rawData: currentData, updatedAt: _dataUpdatedAt);
+        latest = StorageSnapshot(
+          rawData: currentData,
+          updatedAt: _dataUpdatedAt,
+        );
       }
 
-      final snapshots =
-          await Future.wait(providers.map((provider) => provider.read()));
+      final snapshots = await Future.wait(
+        providers.map((provider) => provider.read()),
+      );
       for (final snapshot in snapshots.whereType<StorageSnapshot>()) {
         if (latest == null || snapshot.updatedAt.isAfter(latest.updatedAt))
           latest = snapshot;
       }
-      latest ??=
-          StorageSnapshot(rawData: currentData, updatedAt: _dataUpdatedAt);
+      latest ??= StorageSnapshot(
+        rawData: currentData,
+        updatedAt: _dataUpdatedAt,
+      );
 
       restore(latest.rawData);
-      final canonical =
-          StorageSnapshot(rawData: export(), updatedAt: _dataUpdatedAt);
+      final canonical = StorageSnapshot(
+        rawData: export(),
+        updatedAt: _dataUpdatedAt,
+      );
       for (final provider in providers) {
         await provider.write(canonical);
       }
       await _p.setString('data', canonical.rawData);
       await _p.setString(
-          'dataUpdatedAt', _dataUpdatedAt.toUtc().toIso8601String());
+        'dataUpdatedAt',
+        _dataUpdatedAt.toUtc().toIso8601String(),
+      );
       _setDirty(false);
       lastSync = DateTime.now();
       syncMessage =
@@ -606,8 +634,9 @@ class AppState extends ChangeNotifier {
   }
 
   Future<bool> pullFromGitHub() async {
-    final uri =
-        Uri.parse(githubUrl).replace(queryParameters: {'ref': githubBranch});
+    final uri = Uri.parse(
+      githubUrl,
+    ).replace(queryParameters: {'ref': githubBranch});
     final response = await http.get(uri, headers: _headers);
 
     if (response.statusCode == 404) return false;
@@ -652,7 +681,8 @@ class AppState extends ChangeNotifier {
 
     if (response.statusCode != 200 && response.statusCode != 201) {
       throw Exception(
-          'GitHub media PUT ${response.statusCode}: ${response.body}');
+        'GitHub media PUT ${response.statusCode}: ${response.body}',
+      );
     }
     return path;
   }
@@ -661,8 +691,9 @@ class AppState extends ChangeNotifier {
     for (final path in ['data/music_manager.json', 'media/singers/.gitkeep']) {
       final uri = Uri.parse('$githubApiBase/$path');
       final existing = await http.get(
-          uri.replace(queryParameters: {'ref': githubBranch}),
-          headers: _headers);
+        uri.replace(queryParameters: {'ref': githubBranch}),
+        headers: _headers,
+      );
       if (existing.statusCode == 200) continue;
       if (existing.statusCode != 404) {
         throw Exception('GitHub GET ${existing.statusCode}: ${existing.body}');
@@ -672,8 +703,9 @@ class AppState extends ChangeNotifier {
         headers: _headers,
         body: jsonEncode({
           'message': 'יצירת מבנה Music Manager',
-          'content':
-              base64Encode(utf8.encode(path.endsWith('.json') ? '{}' : '')),
+          'content': base64Encode(
+            utf8.encode(path.endsWith('.json') ? '{}' : ''),
+          ),
           'branch': githubBranch,
         }),
       );
@@ -687,14 +719,16 @@ class AppState extends ChangeNotifier {
     String? sha;
 
     final getResponse = await http.get(
-        uri.replace(queryParameters: {'ref': githubBranch}),
-        headers: _headers);
+      uri.replace(queryParameters: {'ref': githubBranch}),
+      headers: _headers,
+    );
 
     if (getResponse.statusCode == 200) {
       sha = jsonDecode(getResponse.body)['sha'];
     } else if (getResponse.statusCode != 404) {
       throw Exception(
-          'GitHub GET ${getResponse.statusCode}: ${getResponse.body}');
+        'GitHub GET ${getResponse.statusCode}: ${getResponse.body}',
+      );
     }
 
     final body = <String, dynamic>{
@@ -704,8 +738,11 @@ class AppState extends ChangeNotifier {
     };
     if (sha != null) body['sha'] = sha;
 
-    final response =
-        await http.put(uri, headers: _headers, body: jsonEncode(body));
+    final response = await http.put(
+      uri,
+      headers: _headers,
+      body: jsonEncode(body),
+    );
 
     if (response.statusCode != 200 && response.statusCode != 201) {
       throw Exception('GitHub PUT ${response.statusCode}: ${response.body}');
@@ -748,11 +785,13 @@ class AppState extends ChangeNotifier {
 
   /// מחיקת הקבצים (מקומי + ענן) – לא חוסם את הממשק
   void _dropFiles(String? localPath, String? assetApi, {MediaFields? except}) {
-    final isReferenced = <MediaFields>[...songs, ...lessons, ...unassignedMedia].any(
-      (media) => !identical(media, except) &&
-          ((localPath != null && media.filePath == localPath) ||
-              (assetApi != null && media.assetApi == assetApi)),
-    );
+    final isReferenced = <MediaFields>[...songs, ...lessons, ...unassignedMedia]
+        .any(
+          (media) =>
+              !identical(media, except) &&
+              ((localPath != null && media.filePath == localPath) ||
+                  (assetApi != null && media.assetApi == assetApi)),
+        );
     if (isReferenced) return;
     if (localPath != null) deleteMedia(localPath).catchError((_) {});
     if (assetApi != null && githubReady)

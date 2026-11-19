@@ -18,35 +18,48 @@ class Track {
   final String title, subtitle;
   final MediaFields media;
   final int? color;
-  Track(this.id, this.kind, this.title, this.subtitle, this.media,
-      {this.color});
+  Track(
+    this.id,
+    this.kind,
+    this.title,
+    this.subtitle,
+    this.media, {
+    this.color,
+  });
 
   factory Track.song(Song s) {
     final sg = app.singer(s.singerId);
-    return Track(s.id, TrackKind.song, s.title, sg?.name ?? '', s,
-        color: sg?.color);
+    return Track(
+      s.id,
+      TrackKind.song,
+      s.title,
+      sg?.name ?? '',
+      s,
+      color: sg?.color,
+    );
   }
 
   factory Track.lesson(Lesson l) => Track(
-        l.id,
-        TrackKind.lesson,
-        l.title,
-        l.parasha.isEmpty
-            ? 'שיעור'
-            : '${l.parashaKind == 'event' ? 'אירוע' : 'פרשת'} ${l.parasha}',
-        l,
-      );
+    l.id,
+    TrackKind.lesson,
+    l.title,
+    l.parasha.isEmpty
+        ? 'שיעור'
+        : '${l.parashaKind == 'event' ? 'אירוע' : 'פרשת'} ${l.parasha}',
+    l,
+  );
 }
 
 /// נגן אחד לכל האפליקציה – ההשמעה ממשיכה גם כשעוברים בין מסכים.
 class PlayerService extends ChangeNotifier {
   static final AndroidLoudnessEnhancer? _boost =
       (!kIsWeb && defaultTargetPlatform == TargetPlatform.android)
-          ? AndroidLoudnessEnhancer()
-          : null;
+      ? AndroidLoudnessEnhancer()
+      : null;
   final AudioPlayer p = AudioPlayer(
-    audioPipeline:
-        _boost == null ? null : AudioPipeline(androidAudioEffects: [_boost!]),
+    audioPipeline: _boost == null
+        ? null
+        : AudioPipeline(androidAudioEffects: [_boost!]),
   );
   final _rnd = Random();
 
@@ -72,12 +85,12 @@ class PlayerService extends ChangeNotifier {
 
   /// נקרא ממסכי הנגן המלא. נדחה למיקרו-משימה כדי לא לעדכן ממשק באמצע בנייה.
   void markFullScreen(String id, bool open) => Future.microtask(() {
-        if (open) {
-          fullScreenOpen.value = id;
-        } else if (fullScreenOpen.value == id) {
-          fullScreenOpen.value = null;
-        }
-      });
+    if (open) {
+      fullScreenOpen.value = id;
+    } else if (fullScreenOpen.value == id) {
+      fullScreenOpen.value = null;
+    }
+  });
 
   static const speeds = [0.75, 1.0, 1.25, 1.5, 1.75, 2.0];
 
@@ -98,8 +111,11 @@ class PlayerService extends ChangeNotifier {
       (shuffle || index + 1 < queue.length || repeat == LoopSetting.all);
 
   /// השמעת רשימה (רשימת השמעה / כל השירים של זמר וכו')
-  Future<void> playQueue(List<Track> tracks,
-      {int start = 0, bool shuffled = false}) async {
+  Future<void> playQueue(
+    List<Track> tracks, {
+    int start = 0,
+    bool shuffled = false,
+  }) async {
     if (tracks.isEmpty) return;
     _savePosition();
     queue = [...tracks];
@@ -119,7 +135,11 @@ class PlayerService extends ChangeNotifier {
   }
 
   void reorderQueue(int oldIndex, int newIndex) {
-    if (oldIndex < 0 || oldIndex >= queue.length || newIndex < 0 || newIndex >= queue.length) return;
+    if (oldIndex < 0 ||
+        oldIndex >= queue.length ||
+        newIndex < 0 ||
+        newIndex >= queue.length)
+      return;
     final items = [...queue];
     final moved = items.removeAt(oldIndex);
     items.insert(newIndex, moved);
@@ -213,8 +233,10 @@ class PlayerService extends ChangeNotifier {
     final t = current;
     if (t == null) return;
     final token = ++_loadToken;
-    _posTimer ??=
-        Timer.periodic(const Duration(seconds: 5), (_) => _savePosition());
+    _posTimer ??= Timer.periodic(
+      const Duration(seconds: 5),
+      (_) => _savePosition(),
+    );
     error = null;
     loading = true;
     downloadProgress = null;
@@ -230,8 +252,10 @@ class PlayerService extends ChangeNotifier {
       } else if (t.media.remoteUrl != null) {
         // הזרמה ישירה (מהיר); אם נכשל (למשל מאגר פרטי) – מורידים ומנגנים מהמכשיר
         try {
-          await p.setUrl(t.media.remoteUrl!,
-              headers: MediaResolver.streamHeaders(t.media.remoteUrl!));
+          await p.setUrl(
+            t.media.remoteUrl!,
+            headers: MediaResolver.streamHeaders(t.media.remoteUrl!),
+          );
         } catch (_) {
           if (kIsWeb || token != _loadToken) rethrow;
           await _downloadThenSet(t, token);
@@ -243,8 +267,9 @@ class PlayerService extends ChangeNotifier {
       }
       if (token != _loadToken) return;
 
-      await p
-          .setLoopMode(repeat == LoopSetting.one ? LoopMode.one : LoopMode.off);
+      await p.setLoopMode(
+        repeat == LoopSetting.one ? LoopMode.one : LoopMode.off,
+      );
       final speed = app.prefs.getDouble('speed_${t.kind.name}') ?? 1.0;
       await p.setSpeed(speed);
       final savedVolume = app.prefs.getDouble('player_volume');
@@ -272,16 +297,18 @@ class PlayerService extends ChangeNotifier {
 
   Future<void> _downloadThenSet(Track t, int token) async {
     var lastPct = -1;
-    final path =
-        await MediaResolver.ensureLocal(t.media, onProgress: (got, total) {
-      if (token != _loadToken || total == null) return;
-      final pct = got * 100 ~/ total;
-      if (pct != lastPct) {
-        lastPct = pct;
-        downloadProgress = got / total;
-        notifyListeners();
-      }
-    });
+    final path = await MediaResolver.ensureLocal(
+      t.media,
+      onProgress: (got, total) {
+        if (token != _loadToken || total == null) return;
+        final pct = got * 100 ~/ total;
+        if (pct != lastPct) {
+          lastPct = pct;
+          downloadProgress = got / total;
+          notifyListeners();
+        }
+      },
+    );
     if (path == null) throw Exception('לא ניתן להוריד את הקובץ');
     if (token == _loadToken) {
       if (kIsWeb) {
