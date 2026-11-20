@@ -42,15 +42,13 @@ class _StartupGateState extends State<StartupGate> {
       await initStorage();
       await app.load();
       // שמירה מיידית כשהאפליקציה עוברת לרקע/נסגרת
-      _lifecycleListener ??= AppLifecycleListener(
-        onStateChange: (state) {
-          if (state == AppLifecycleState.paused ||
-              state == AppLifecycleState.inactive ||
-              state == AppLifecycleState.detached) {
-            unawaited(app.flushNow());
-          }
-        },
-      );
+      _lifecycleListener ??= AppLifecycleListener(onStateChange: (state) {
+        if (state == AppLifecycleState.paused ||
+            state == AppLifecycleState.inactive ||
+            state == AppLifecycleState.detached) {
+          unawaited(app.flushNow());
+        }
+      });
       if (!mounted) return;
       setState(() {
         _ready = true;
@@ -108,10 +106,8 @@ class _StartupGateState extends State<StartupGate> {
                     ),
                     if (_startupError == null) ...[
                       const SizedBox(height: 4),
-                      const Text(
-                        'Manages lessons and songs',
-                        textDirection: TextDirection.ltr,
-                      ),
+                      const Text('Manages lessons and songs',
+                          textDirection: TextDirection.ltr),
                     ],
                     const SizedBox(height: 8),
                     Text(
@@ -158,22 +154,23 @@ class MyApp extends StatelessWidget {
   @override
   // מאזינים רק למצב כהה – לא לכל שמירה. האזנה ל-app כולו בנתה את כל האפליקציה מחדש בכל הקשה.
   Widget build(BuildContext context) => ValueListenableBuilder<bool>(
-    valueListenable: app.darkMode,
-    builder: (_, dark, __) => MaterialApp(
-      title: 'ניהול שירים',
-      debugShowCheckedModeBanner: false,
-      locale: const Locale('he'),
-      supportedLocales: const [Locale('he'), Locale('en')],
-      localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      scrollBehavior: const MaterialScrollBehavior().copyWith(scrollbars: true),
-      themeMode: dark ? ThemeMode.dark : ThemeMode.light,
-      theme: AppTheme.light(),
-      darkTheme: AppTheme.dark(),
-      home: const Shell(),
-    ),
-  );
+        valueListenable: app.darkMode,
+        builder: (_, dark, __) => MaterialApp(
+          title: 'ניהול שירים',
+          debugShowCheckedModeBanner: false,
+          locale: const Locale('he'),
+          supportedLocales: const [Locale('he'), Locale('en')],
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          scrollBehavior:
+              const MaterialScrollBehavior().copyWith(scrollbars: true),
+          themeMode: dark ? ThemeMode.dark : ThemeMode.light,
+          theme: AppTheme.light(),
+          darkTheme: AppTheme.dark(),
+          home: const Shell(),
+        ),
+      );
 }

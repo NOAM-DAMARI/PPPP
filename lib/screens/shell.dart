@@ -23,31 +23,26 @@ class _ShellState extends State<Shell> {
     final destinations = <NavigationDestination>[
       if (!Shell.lessonsOnly)
         const NavigationDestination(
-          icon: Icon(Icons.library_music_outlined),
-          selectedIcon: Icon(Icons.library_music_rounded),
-          label: 'שירים',
-        ),
+            icon: Icon(Icons.library_music_outlined),
+            selectedIcon: Icon(Icons.library_music_rounded),
+            label: 'שירים'),
       const NavigationDestination(
-        icon: Icon(Icons.school_outlined),
-        selectedIcon: Icon(Icons.school_rounded),
-        label: 'שיעורים',
-      ),
+          icon: Icon(Icons.school_outlined),
+          selectedIcon: Icon(Icons.school_rounded),
+          label: 'שיעורים'),
       if (!Shell.lessonsOnly)
         const NavigationDestination(
-          icon: Icon(Icons.graphic_eq_rounded),
-          selectedIcon: Icon(Icons.equalizer_rounded),
-          label: 'DJ',
-        ),
+            icon: Icon(Icons.graphic_eq_rounded),
+            selectedIcon: Icon(Icons.equalizer_rounded),
+            label: 'DJ'),
       const NavigationDestination(
-        icon: Icon(Icons.folder_outlined),
-        selectedIcon: Icon(Icons.folder_rounded),
-        label: 'קבצים',
-      ),
+          icon: Icon(Icons.folder_outlined),
+          selectedIcon: Icon(Icons.folder_rounded),
+          label: 'קבצים'),
       const NavigationDestination(
-        icon: Icon(Icons.settings_outlined),
-        selectedIcon: Icon(Icons.settings_rounded),
-        label: 'הגדרות',
-      ),
+          icon: Icon(Icons.settings_outlined),
+          selectedIcon: Icon(Icons.settings_rounded),
+          label: 'הגדרות'),
     ];
     final pages = <Widget>[
       if (!Shell.lessonsOnly) const Dashboard(),

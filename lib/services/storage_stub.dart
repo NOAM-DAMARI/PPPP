@@ -36,7 +36,8 @@ Future<String?> downloadToCache({
   required String key,
   Map<String, String> headers = const {},
   void Function(int received, int? total)? onProgress,
-}) async => null;
+}) async =>
+    null;
 
 class UploadResponse {
   final int status;
@@ -54,8 +55,7 @@ Future<UploadResponse> uploadStream({
 }) async {
   if (bytes == null || bytes.length != length) {
     throw StateError(
-      'בדפדפן תוכן הקובץ לא נטען במלואו. יש לבחור את הקובץ מחדש.',
-    );
+        'בדפדפן תוכן הקובץ לא נטען במלואו. יש לבחור את הקובץ מחדש.');
   }
   final h = Map<String, String>.of(headers)
     ..remove('Content-Length')
@@ -75,7 +75,5 @@ Future<UploadResponse> uploadStream({
     }
   }
   throw http.ClientException(
-    'העלאת הקובץ נקטעה אחרי 3 ניסיונות: $lastError',
-    uri,
-  );
+      'העלאת הקובץ נקטעה אחרי 3 ניסיונות: $lastError', uri);
 }

@@ -1,32 +1,33 @@
-import 'dart:html' as html;
+import 'dart:js_interop';
 import 'dart:typed_data';
 
-Future<String?> createMediaObjectUrl(Uint8List bytes, String mime) async {
-  final blob = html.Blob([bytes], mime);
-  return html.Url.createObjectUrlFromBlob(blob);
-}
+import 'package:web/web.dart' as web;
 
-void revokeMediaObjectUrl(String url) => html.Url.revokeObjectUrl(url);
+web.Blob _blob(Uint8List bytes, String mime) =>
+    web.Blob(<JSAny>[bytes.toJS].toJS, web.BlobPropertyBag(type: mime));
 
-Future<void> downloadBytes(Uint8List bytes, String name, String mime) async {
-  final blob = html.Blob([bytes], mime);
-  final url = html.Url.createObjectUrlFromBlob(blob);
-  final anchor = html.AnchorElement(href: url)
-    ..download = name
-    ..style.display = 'none';
-  html.document.body?.children.add(anchor);
+Future<String?> createMediaObjectUrl(Uint8List bytes, String mime) async =>
+    web.URL.createObjectURL(_blob(bytes, mime));
+
+void revokeMediaObjectUrl(String url) => web.URL.revokeObjectURL(url);
+
+void _clickAnchor(String url, String name, {bool newTab = false}) {
+  final anchor = web.HTMLAnchorElement()
+    ..href = url
+    ..download = name;
+  if (newTab) anchor.target = '_blank';
+  anchor.style.display = 'none';
+  web.document.body?.append(anchor);
   anchor.click();
   anchor.remove();
-  html.Url.revokeObjectUrl(url);
+}
+
+Future<void> downloadBytes(Uint8List bytes, String name, String mime) async {
+  final url = web.URL.createObjectURL(_blob(bytes, mime));
+  _clickAnchor(url, name);
+  web.URL.revokeObjectURL(url);
 }
 
 /// הורדת קובץ מכתובת (בלי לטעון לזיכרון) – פותח קישור הורדה בדפדפן
-Future<void> openDownloadUrl(String url, String name) async {
-  final anchor = html.AnchorElement(href: url)
-    ..download = name
-    ..target = '_blank'
-    ..style.display = 'none';
-  html.document.body?.children.add(anchor);
-  anchor.click();
-  anchor.remove();
-}
+Future<void> openDownloadUrl(String url, String name) async =>
+    _clickAnchor(url, name, newTab: true);

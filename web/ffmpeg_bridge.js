@@ -78,6 +78,6 @@
 
   window.lessonFfmpeg = {
     available: async () => { try { await get(); return true; } catch (_) { return false; } },
-    run: async (input, inName, outName, args) => (await get()).run(input, inName, outName, args),
+    run: async (input, inName, outName, argsJson) => (await get()).run(input, inName, outName, JSON.parse(argsJson)),
   };
 })();

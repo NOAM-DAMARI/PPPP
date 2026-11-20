@@ -9,13 +9,7 @@ class HebrewDate {
   const HebrewDate(this.year, this.month, this.day);
 
   static const nisan = 1, iyar = 2, sivan = 3, tammuz = 4, av = 5, elul = 6;
-  static const tishrei = 7,
-      cheshvan = 8,
-      kislev = 9,
-      tevet = 10,
-      shevat = 11,
-      adar = 12,
-      adar2 = 13;
+  static const tishrei = 7, cheshvan = 8, kislev = 9, tevet = 10, shevat = 11, adar = 12, adar2 = 13;
 
   /// R.D. (מספר ימים מ-1.1.1 לועזי) של א׳ תשרי שנה 1, פחות יום
   static const _epoch = -1373428;
@@ -29,31 +23,28 @@ class HebrewDate {
 
   /// ימים שעברו ממולד תוהו עד ראש השנה של y (כולל דחיות)
   static int _elapsedDays(int y) => _elapsedCache.putIfAbsent(y, () {
-    final prev = y - 1;
-    final mElapsed =
-        235 * (prev ~/ 19) + 12 * (prev % 19) + ((prev % 19) * 7 + 1) ~/ 19;
-    final pElapsed = 204 + 793 * (mElapsed % 1080);
-    final hElapsed =
-        5 + 12 * mElapsed + 793 * (mElapsed ~/ 1080) + pElapsed ~/ 1080;
-    final parts = (pElapsed % 1080) + 1080 * (hElapsed % 24);
-    final d = 1 + 29 * mElapsed + hElapsed ~/ 24;
-    var alt = d;
-    if (parts >= 19440 ||
-        (d % 7 == 2 && parts >= 9924 && !isLeapYear(y)) ||
-        (d % 7 == 1 && parts >= 16789 && isLeapYear(prev))) {
-      alt++;
-    }
-    if (alt % 7 == 0 || alt % 7 == 3 || alt % 7 == 5) alt++;
-    return alt;
-  });
+        final prev = y - 1;
+        final mElapsed = 235 * (prev ~/ 19) + 12 * (prev % 19) + ((prev % 19) * 7 + 1) ~/ 19;
+        final pElapsed = 204 + 793 * (mElapsed % 1080);
+        final hElapsed = 5 + 12 * mElapsed + 793 * (mElapsed ~/ 1080) + pElapsed ~/ 1080;
+        final parts = (pElapsed % 1080) + 1080 * (hElapsed % 24);
+        final d = 1 + 29 * mElapsed + hElapsed ~/ 24;
+        var alt = d;
+        if (parts >= 19440 ||
+            (d % 7 == 2 && parts >= 9924 && !isLeapYear(y)) ||
+            (d % 7 == 1 && parts >= 16789 && isLeapYear(prev))) {
+          alt++;
+        }
+        if (alt % 7 == 0 || alt % 7 == 3 || alt % 7 == 5) alt++;
+        return alt;
+      });
 
   static int daysInYear(int y) => _elapsedDays(y + 1) - _elapsedDays(y);
   static bool _longCheshvan(int y) => daysInYear(y) % 10 == 5;
   static bool _shortKislev(int y) => daysInYear(y) % 10 == 3;
 
   static int daysInMonth(int m, int y) {
-    if (m == iyar || m == tammuz || m == elul || m == tevet || m == adar2)
-      return 29;
+    if (m == iyar || m == tammuz || m == elul || m == tevet || m == adar2) return 29;
     if (m == adar && !isLeapYear(y)) return 29;
     if (m == cheshvan && !_longCheshvan(y)) return 29;
     if (m == kislev && _shortKislev(y)) return 29;
@@ -62,16 +53,12 @@ class HebrewDate {
 
   /// חודשי השנה לפי הסדר (מתשרי עד אלול)
   static List<int> monthsOrdered(int y) => [
-    for (var m = tishrei; m <= monthsInYear(y); m++) m,
-    for (var m = nisan; m <= elul; m++) m,
-  ];
+        for (var m = tishrei; m <= monthsInYear(y); m++) m,
+        for (var m = nisan; m <= elul; m++) m,
+      ];
 
   bool get isValid =>
-      year >= 1 &&
-      month >= 1 &&
-      month <= monthsInYear(year) &&
-      day >= 1 &&
-      day <= daysInMonth(month, year);
+      year >= 1 && month >= 1 && month <= monthsInYear(year) && day >= 1 && day <= daysInMonth(month, year);
 
   // ---------- המרות ----------
 
@@ -114,9 +101,7 @@ class HebrewDate {
   static const _unixRd = 719163;
 
   static int _gregToAbs(DateTime d) =>
-      DateTime.utc(d.year, d.month, d.day).millisecondsSinceEpoch ~/
-          Duration.millisecondsPerDay +
-      _unixRd;
+      DateTime.utc(d.year, d.month, d.day).millisecondsSinceEpoch ~/ Duration.millisecondsPerDay + _unixRd;
 
   /// המרה מתאריך לועזי. [afterSunset] – אחרי השקיעה היום העברי כבר התחלף.
   factory HebrewDate.fromGregorian(DateTime date, {bool afterSunset = false}) =>
@@ -125,10 +110,7 @@ class HebrewDate {
   /// התאריך הלועזי (בשעה 12:00 כדי להימנע מבעיות שעון קיץ)
   DateTime toGregorian() {
     final abs = _toAbs();
-    final utc = DateTime.fromMillisecondsSinceEpoch(
-      (abs - _unixRd) * Duration.millisecondsPerDay,
-      isUtc: true,
-    );
+    final utc = DateTime.fromMillisecondsSinceEpoch((abs - _unixRd) * Duration.millisecondsPerDay, isUtc: true);
     return DateTime(utc.year, utc.month, utc.day, 12);
   }
 
@@ -155,28 +137,18 @@ class HebrewDate {
     }[m]!;
   }
 
-  static const dayNames = [
-    'ראשון',
-    'שני',
-    'שלישי',
-    'רביעי',
-    'חמישי',
-    'שישי',
-    'שבת',
-  ];
+  static const dayNames = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
 
   String get dayName => dayNames[dayOfWeek - 1];
 
   /// לדוגמה: כ״ה חשוון תשפ״ז
-  String format() =>
-      '${gematria(day)} ${monthName(month, year)} ${gematria(year % 1000)}';
+  String format() => '${gematria(day)} ${monthName(month, year)} ${gematria(year % 1000)}';
 
   @override
   String toString() => format();
 
   @override
-  bool operator ==(Object o) =>
-      o is HebrewDate && o.year == year && o.month == month && o.day == day;
+  bool operator ==(Object o) => o is HebrewDate && o.year == year && o.month == month && o.day == day;
 
   @override
   int get hashCode => Object.hash(year, month, day);
@@ -203,12 +175,9 @@ class HebrewDate {
     }
     final s = sb.toString();
     if (s.isEmpty) return '';
-    return s.length == 1
-        ? '$s׳'
-        : '${s.substring(0, s.length - 1)}״${s[s.length - 1]}';
+    return s.length == 1 ? '$s׳' : '${s.substring(0, s.length - 1)}״${s[s.length - 1]}';
   }
 
   /// שנה עברית מלאה, לדוגמה: ה׳תשפ״ז
-  static String yearLabel(int y) =>
-      '${gematria(y ~/ 1000)}${gematria(y % 1000)}';
+  static String yearLabel(int y) => '${gematria(y ~/ 1000)}${gematria(y % 1000)}';
 }

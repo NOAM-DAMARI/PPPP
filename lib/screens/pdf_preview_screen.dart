@@ -13,12 +13,7 @@ class PdfPreviewScreen extends StatelessWidget {
   final String fileName;
   final Future<Uint8List> Function() buildPdf;
 
-  const PdfPreviewScreen({
-    super.key,
-    required this.title,
-    required this.fileName,
-    required this.buildPdf,
-  });
+  const PdfPreviewScreen({super.key, required this.title, required this.fileName, required this.buildPdf});
 
   Future<void> _print(BuildContext context) async {
     try {
@@ -35,10 +30,7 @@ class PdfPreviewScreen extends StatelessWidget {
         await downloadBytes(bytes, fileName, 'application/pdf');
         return;
       }
-      final path = await FilePicker.platform.saveFile(
-        fileName: fileName,
-        bytes: bytes,
-      );
+      final path = await FilePicker.platform.saveFile(fileName: fileName, bytes: bytes);
       if (path == null && context.mounted) {
         snack(context, 'לא נבחר מיקום לשמירת הקובץ');
       } else if (context.mounted) {
@@ -59,38 +51,22 @@ class PdfPreviewScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      title: Text(
-        'תצוגת PDF · $title',
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-      actions: [
-        IconButton(
-          tooltip: 'הדפס',
-          onPressed: () => _print(context),
-          icon: const Icon(Icons.print_rounded),
+        appBar: AppBar(
+          title: Text('תצוגת PDF · $title', maxLines: 1, overflow: TextOverflow.ellipsis),
+          actions: [
+            IconButton(tooltip: 'הדפס', onPressed: () => _print(context), icon: const Icon(Icons.print_rounded)),
+            IconButton(tooltip: 'הורד', onPressed: () => _download(context), icon: const Icon(Icons.download_rounded)),
+            IconButton(tooltip: 'שתף', onPressed: () => _share(context), icon: const Icon(Icons.share_rounded)),
+          ],
         ),
-        IconButton(
-          tooltip: 'הורד',
-          onPressed: () => _download(context),
-          icon: const Icon(Icons.download_rounded),
+        body: PdfPreview(
+          build: (_) => buildPdf(),
+          pdfFileName: fileName,
+          initialPageFormat: PdfPageFormat.a4,
+          canChangePageFormat: false,
+          canChangeOrientation: false,
+          allowPrinting: false,
+          allowSharing: false,
         ),
-        IconButton(
-          tooltip: 'שתף',
-          onPressed: () => _share(context),
-          icon: const Icon(Icons.share_rounded),
-        ),
-      ],
-    ),
-    body: PdfPreview(
-      build: (_) => buildPdf(),
-      pdfFileName: fileName,
-      initialPageFormat: PdfPageFormat.a4,
-      canChangePageFormat: false,
-      canChangeOrientation: false,
-      allowPrinting: false,
-      allowSharing: false,
-    ),
-  );
+      );
 }

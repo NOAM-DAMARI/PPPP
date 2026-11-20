@@ -23,69 +23,45 @@ class LessonTile extends StatelessWidget {
       leading: Container(
         width: 44,
         height: 44,
-        decoration: BoxDecoration(
-          color: c.tertiaryContainer,
-          borderRadius: BorderRadius.circular(14),
-        ),
+        decoration: BoxDecoration(color: c.tertiaryContainer, borderRadius: BorderRadius.circular(14)),
         child: Icon(Icons.headphones_rounded, color: c.onTertiaryContainer),
       ),
       title: Text(l.title, maxLines: 1, overflow: TextOverflow.ellipsis),
       subtitle: Padding(
         padding: const EdgeInsets.only(top: 2),
-        child: Wrap(
-          spacing: 6,
-          runSpacing: 4,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            Text(lessonMeta(l)),
-            if (hint != null)
-              Text(
-                hint!,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(color: c.primary, fontSize: 12),
-              ),
-            if (l.transcript.isNotEmpty)
-              const Pill('תומלל', icon: Icons.subject_rounded),
-            if (saved != null && saved > 5000)
-              Pill(
-                'הופסק ב-${fmt(Duration(milliseconds: saved))}',
-                icon: Icons.history_rounded,
-              ),
-          ],
+        child: Wrap(spacing: 6, runSpacing: 4, crossAxisAlignment: WrapCrossAlignment.center, children: [
+          Text(lessonMeta(l)),
+          if (hint != null) Text(hint!, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: c.primary, fontSize: 12)),
+          if (l.transcript.isNotEmpty) const Pill('תומלל', icon: Icons.subject_rounded),
+          if (saved != null && saved > 5000) Pill('הופסק ב-${fmt(Duration(milliseconds: saved))}', icon: Icons.history_rounded),
+        ]),
+      ),
+      trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+        IconButton(
+          tooltip: l.fav ? 'הסרה ממועדפים' : 'הוספה למועדפים',
+          icon: Icon(l.fav ? Icons.star_rounded : Icons.star_outline_rounded,
+              color: l.fav ? const Color(0xFFF2A541) : c.onSurfaceVariant),
+          onPressed: () {
+            l.fav = !l.fav;
+            app.save();
+          },
         ),
-      ),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
+        if (l.hasMedia)
           IconButton(
-            tooltip: l.fav ? 'הסרה ממועדפים' : 'הוספה למועדפים',
-            icon: Icon(
-              l.fav ? Icons.star_rounded : Icons.star_outline_rounded,
-              color: l.fav ? const Color(0xFFF2A541) : c.onSurfaceVariant,
-            ),
-            onPressed: () {
-              l.fav = !l.fav;
-              app.save();
-            },
+            tooltip: 'השמעה',
+            icon: const Icon(Icons.play_circle_outline_rounded),
+            onPressed: () => player.open(Track.lesson(l)),
           ),
-          if (l.hasMedia)
-            IconButton(
-              tooltip: 'השמעה',
-              icon: const Icon(Icons.play_circle_outline_rounded),
-              onPressed: () => player.open(Track.lesson(l)),
-            ),
-          IconButton(
-            tooltip: 'מחיקת השיעור',
-            icon: Icon(Icons.delete_outline_rounded, color: c.error),
-            onPressed: () async {
-              if (await confirm(context, 'למחוק את השיעור "${l.title}"?')) {
-                app.deleteLesson(l);
-              }
-            },
-          ),
-        ],
-      ),
+        IconButton(
+          tooltip: 'מחיקת השיעור',
+          icon: Icon(Icons.delete_outline_rounded, color: c.error),
+          onPressed: () async {
+            if (await confirm(context, 'למחוק את השיעור "${l.title}"?')) {
+              app.deleteLesson(l);
+            }
+          },
+        ),
+      ]),
       onTap: () => go(context, LessonPage(l)),
     );
   }

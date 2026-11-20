@@ -54,32 +54,27 @@ class GitHubJsonStorageProvider implements StorageProvider {
   final String branch;
   final String token;
 
-  const GitHubJsonStorageProvider({
-    required this.owner,
-    required this.repository,
-    required this.branch,
-    required this.token,
-  });
+  const GitHubJsonStorageProvider(
+      {required this.owner,
+      required this.repository,
+      required this.branch,
+      required this.token});
 
-  Uri get _uri => Uri.https(
-    'api.github.com',
-    '/repos/$owner/$repository/contents/data/music_manager.json',
-  );
+  Uri get _uri => Uri.https('api.github.com',
+      '/repos/$owner/$repository/contents/data/music_manager.json');
   Map<String, String> get _headers => {
-    'Accept': 'application/vnd.github+json',
-    'Authorization': 'Bearer $token',
-    'X-GitHub-Api-Version': '2022-11-28',
-  };
+        'Accept': 'application/vnd.github+json',
+        'Authorization': 'Bearer $token',
+        'X-GitHub-Api-Version': '2022-11-28',
+      };
 
   @override
   String get name => 'GitHub';
 
   @override
   Future<StorageSnapshot?> read() async {
-    final response = await http.get(
-      _uri.replace(queryParameters: {'ref': branch}),
-      headers: _headers,
-    );
+    final response = await http
+        .get(_uri.replace(queryParameters: {'ref': branch}), headers: _headers);
     if (response.statusCode == 404) return null;
     if (response.statusCode != 200)
       throw Exception('GitHub GET ${response.statusCode}: ${response.body}');
@@ -91,13 +86,11 @@ class GitHubJsonStorageProvider implements StorageProvider {
   @override
   Future<void> write(StorageSnapshot snapshot) async {
     String? sha;
-    final current = await http.get(
-      _uri.replace(queryParameters: {'ref': branch}),
-      headers: _headers,
-    );
+    final current = await http
+        .get(_uri.replace(queryParameters: {'ref': branch}), headers: _headers);
     if (current.statusCode == 200) {
-      sha = (jsonDecode(current.body) as Map<String, dynamic>)['sha']
-          ?.toString();
+      sha =
+          (jsonDecode(current.body) as Map<String, dynamic>)['sha']?.toString();
     } else if (current.statusCode != 404) {
       throw Exception('GitHub GET ${current.statusCode}: ${current.body}');
     }

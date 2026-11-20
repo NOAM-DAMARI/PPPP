@@ -3,6 +3,14 @@
 <head>
   <!-- Relative base keeps the packaged Web app working from the domain root or a nested folder. -->
   <base href="$FLUTTER_BASE_HREF">
+  <script>
+    // \u05d0\u05dd \u05d4\u05db\u05dc\u05d9 \u05dc\u05d0 \u05d4\u05d7\u05dc\u05d9\u05e3 \u05d0\u05ea \u05de\u05e6\u05d9\u05d9\u05df \u05d4-base href, \u05de\u05e9\u05ea\u05de\u05e9\u05d9\u05dd \u05d1\u05e0\u05ea\u05d9\u05d1 \u05d9\u05d7\u05e1\u05d9 \u05db\u05d3\u05d9 \u05e9\u05db\u05dc \u05d4\u05e7\u05d1\u05e6\u05d9\u05dd \u05d9\u05d9\u05de\u05e6\u05d0\u05d5.
+    (function () {
+      var b = document.querySelector('base');
+      var h = b && b.getAttribute('href');
+      if (b && (!h || h.indexOf('FLUTTER_BASE' + '_HREF') !== -1)) b.setAttribute('href', './');
+    })();
+  </script>
 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -23,10 +31,10 @@
   <link rel="manifest" href="manifest.json">
   <style>
     html, body { width: 100%; min-height: 100%; margin: 0; background: #f6f5f1; font-family: Arial, sans-serif; }
-    /* מסך טעינה: תמונת האתר ברקע, והטעינה (טקסט + גלגל) מתחתיה */
+    /*  :   ,  ( + )  */
     #app-loading { position: fixed; inset: 0; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 16px; box-sizing: border-box; color: #173b6b; background: #f6f5f1; }
     #app-loading-image { display: block; width: min(100%, 920px); max-height: 66vh; object-fit: contain; }
-    #app-loading-status { margin: 0; color: #35507a; font-size: 15px; line-height: 1.6; text-align: center; }
+    #app-loading-status { margin: 0; white-space: pre-line; color: #35507a; font-size: 15px; line-height: 1.6; text-align: center; }
     #app-loading-spinner { width: 30px; height: 30px; border: 3px solid #d3dcea; border-top-color: #1b56b8; border-radius: 50%; animation: app-spin .8s linear infinite; }
     #app-loading[data-error="true"] #app-loading-spinner { display: none; }
     #app-loading-retry { display: none; min-height: 42px; padding: 0 18px; border: 0; border-radius: 12px; color: #fff; background: #1b56b8; font: inherit; font-weight: 700; cursor: pointer; }
@@ -35,20 +43,20 @@
     @media (prefers-reduced-motion: reduce) { #app-loading-spinner { animation-duration: 2s; } }
   </style>
   <script>
-    window.showAppLoadError = function () {
+    window.showAppLoadError = function (detail) {
       const loader = document.getElementById('app-loading');
       if (!loader) return;
       loader.dataset.error = 'true';
-      document.getElementById('app-loading-status').textContent = 'Loading timed out. Make sure every file in build/web was uploaded, then refresh.';
+      let msg = '\u05d4\u05d0\u05e4\u05dc\u05d9\u05e7\u05e6\u05d9\u05d4 \u05dc\u05d0 \u05e0\u05d8\u05e2\u05e0\u05d4. \u05d5\u05d3\u05d0\u05d5 \u05e9\u05db\u05dc \u05d4\u05e7\u05d1\u05e6\u05d9\u05dd \u05de\u05ea\u05d9\u05e7\u05d9\u05d9\u05ea build/web \u05d4\u05d5\u05e2\u05dc\u05d5 (\u05db\u05d5\u05dc\u05dc main.dart.js \u05d5-canvaskit), \u05d5\u05d0\u05d6 \u05e8\u05e2\u05e0\u05e0\u05d5.';
+      if (detail) msg += '\n(' + (detail.message || detail) + ')';
+      document.getElementById('app-loading-status').textContent = msg;
     };
-    const appLoadTimeout = window.setTimeout(window.showAppLoadError, 20000);
+    // 60 \u05e9\u05e0\u05d9\u05d5\u05ea: \u05d7\u05d9\u05d1\u05d5\u05e8 \u05d0\u05d9\u05d8\u05d9 \u05e6\u05e8\u05d9\u05da \u05d6\u05de\u05df \u05dc\u05d4\u05d5\u05e8\u05d9\u05d3 \u05d0\u05ea \u05de\u05e0\u05d5\u05e2 Flutter \u05d1\u05e4\u05e2\u05dd \u05d4\u05e8\u05d0\u05e9\u05d5\u05e0\u05d4.
+    const appLoadTimeout = window.setTimeout(function () { window.showAppLoadError(); }, 60000);
     window.addEventListener('flutter-first-frame', function () {
       window.clearTimeout(appLoadTimeout);
       document.getElementById('app-loading')?.remove();
     }, { once: true });
-    window.addEventListener('unhandledrejection', function () {
-      window.showAppLoadError();
-    });
   </script>
 </head>
 <body>
@@ -59,6 +67,37 @@
     <button id="app-loading-retry" type="button" onclick="window.location.reload()">&#x05E8;&#x05E2;&#x05E0;&#x05D5;&#x05DF; &#x05D4;&#x05D0;&#x05E4;&#x05DC;&#x05D9;&#x05E7;&#x05E6;&#x05D9;&#x05D4;</button>
   </div>
   <script src="ffmpeg_bridge.js"></script>
-  <script src="flutter_bootstrap.js" async onerror="window.showAppLoadError()"></script>
+  <script>
+    // \u05d8\u05d5\u05e2\u05df \u05d0\u05ea Flutter: \u05e7\u05d5\u05d3\u05dd flutter_bootstrap.js, \u05d5\u05d0\u05dd \u05d4\u05d5\u05d0 \u05dc\u05d0 \u05e7\u05d9\u05d9\u05dd (\u05d2\u05e8\u05e1\u05d0\u05d5\u05ea/\u05db\u05dc\u05d9\u05dd \u05d9\u05e9\u05e0\u05d9\u05dd) \u2013 flutter.js \u05d5\u05d0\u05d6 main.dart.js.
+    (function () {
+      function add(src, onload, onerror) {
+        var s = document.createElement('script');
+        s.src = src; s.async = true; s.onload = onload; s.onerror = onerror;
+        document.body.appendChild(s);
+      }
+      function startWithLoader() {
+        var loader = window._flutter && window._flutter.loader;
+        if (!loader) { add('main.dart.js', null, function () { window.showAppLoadError('main.dart.js'); }); return; }
+        var run = { onEntrypointLoaded: async function (engineInitializer) {
+          var appRunner = await engineInitializer.initializeEngine();
+          await appRunner.runApp();
+        } };
+        try {
+          if (loader.loadEntrypoint) loader.loadEntrypoint(run);
+          else if (loader.load) loader.load(run);
+          else add('main.dart.js', null, function () { window.showAppLoadError('main.dart.js'); });
+        } catch (e) { window.showAppLoadError(e); }
+      }
+      function fallback() {
+        add('flutter.js', startWithLoader, function () {
+          add('main.dart.js', null, function () { window.showAppLoadError('flutter_bootstrap.js / flutter.js / main.dart.js'); });
+        });
+      }
+      add('flutter_bootstrap.js', function () {
+        // \u05e7\u05d5\u05d1\u05e5 \u05e9\u05dc\u05d0 \u05e2\u05d1\u05e8 \u05e2\u05d9\u05d1\u05d5\u05d3 \u05e9\u05dc Flutter \u05dc\u05d0 \u05de\u05d2\u05d3\u05d9\u05e8 \u05d0\u05ea _flutter \u2013 \u05e2\u05d5\u05d1\u05e8\u05d9\u05dd \u05dc\u05d8\u05e2\u05d9\u05e0\u05d4 \u05d4\u05d9\u05e9\u05e0\u05d4.
+        if (!window._flutter) fallback();
+      }, fallback);
+    })();
+  </script>
 </body>
 </html>

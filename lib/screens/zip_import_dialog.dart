@@ -92,7 +92,7 @@ class ZipImportDialog extends StatefulWidget {
 class _ZipImportDialogState extends State<ZipImportDialog> {
   late final List<_ZipImportRow> rows = [
     for (final entry in widget.entries)
-      _ZipImportRow(entry, widget.defaultTarget),
+      _ZipImportRow(entry, widget.defaultTarget)
   ];
 
   List<_ZipImportRow> get _included => rows.where((row) => !row.skip).toList();
@@ -111,9 +111,8 @@ class _ZipImportDialogState extends State<ZipImportDialog> {
     };
   }
 
-  bool _isDuplicate(_ZipImportRow row) => _existingFileNames.contains(
-    row.entry.path.split('/').last.trim().toLowerCase(),
-  );
+  bool _isDuplicate(_ZipImportRow row) =>
+      _existingFileNames.contains(row.entry.path.split('/').last.trim().toLowerCase());
 
   int get _duplicateCount => rows.where(_isDuplicate).length;
 
@@ -156,19 +155,15 @@ class _ZipImportDialogState extends State<ZipImportDialog> {
   /// 0 סוג, 1 קובץ, 2 שם, 3 מספר, 4 פרשה, 5 סוג פרשה, 6 תאריך,
   /// 7 זמר, 8 שנה, 9 מקום, 10 מילים, 11 הערות, 12 דלג
   Set<int> get _visibleCols {
-    final lessonLike =
-        _has(ZipImportTarget.lesson) || _has(ZipImportTarget.unassigned);
+    final lessonLike = _has(ZipImportTarget.lesson) || _has(ZipImportTarget.unassigned);
     final song = _has(ZipImportTarget.song);
     final dated = _has(ZipImportTarget.lesson) || song;
     return {
-      0,
-      1,
-      2,
+      0, 1, 2,
       if (lessonLike) ...[3, 4, 5],
       if (dated) 6,
       if (song) ...[7, 8, 9, 10],
-      11,
-      12,
+      11, 12,
     };
   }
 
@@ -182,12 +177,8 @@ class _ZipImportDialogState extends State<ZipImportDialog> {
   }
 
   Future<void> _editLyrics(_ZipImportRow row) async {
-    final text = await askText(
-      context,
-      'מילים – ${row.title.text.trim()}',
-      init: row.lyrics,
-      lines: 12,
-    );
+    final text = await askText(context, 'מילים – ${row.title.text.trim()}',
+        init: row.lyrics, lines: 12);
     if (text != null && mounted) setState(() => row.lyrics = text);
   }
 
@@ -198,8 +189,7 @@ class _ZipImportDialogState extends State<ZipImportDialog> {
             context: context,
             initialDate: row.date,
             firstDate: DateTime(1900),
-            lastDate: DateTime(2150),
-          );
+            lastDate: DateTime(2150));
     if (picked != null && mounted) setState(() => row.date = picked);
   }
 
@@ -212,8 +202,7 @@ class _ZipImportDialogState extends State<ZipImportDialog> {
             context: context,
             initialDate: initial,
             firstDate: DateTime(1900),
-            lastDate: DateTime(2150),
-          );
+            lastDate: DateTime(2150));
     if (picked == null || !mounted) return;
     setState(() {
       for (final row in _included) {
@@ -231,23 +220,18 @@ class _ZipImportDialogState extends State<ZipImportDialog> {
         context: context,
         builder: (context) => AlertDialog(
           title: Text('נמצאו $duplicateRows קבצים כפולים'),
-          content: const Text(
-            'ההתאמה נעשית לפי שם הקובץ בלבד. מה לעשות בקבצים המסומנים?',
-          ),
+          content: const Text('ההתאמה נעשית לפי שם הקובץ בלבד. מה לעשות בקבצים המסומנים?'),
           actions: [
             TextButton(
-              onPressed: () =>
-                  Navigator.pop(context, ZipDuplicateAction.skipDuplicates),
+              onPressed: () => Navigator.pop(context, ZipDuplicateAction.skipDuplicates),
               child: const Text('דלג על הכפולים'),
             ),
             TextButton(
-              onPressed: () =>
-                  Navigator.pop(context, ZipDuplicateAction.keepBoth),
+              onPressed: () => Navigator.pop(context, ZipDuplicateAction.keepBoth),
               child: const Text('שמור את שניהם'),
             ),
             FilledButton(
-              onPressed: () =>
-                  Navigator.pop(context, ZipDuplicateAction.replace),
+              onPressed: () => Navigator.pop(context, ZipDuplicateAction.replace),
               child: const Text('החלף קובץ קיים'),
             ),
           ],
@@ -259,19 +243,13 @@ class _ZipImportDialogState extends State<ZipImportDialog> {
     final output = <ZipImportSelection>[];
     for (final row in _included) {
       final duplicate = _isDuplicate(row);
-      if (duplicate && duplicateAction == ZipDuplicateAction.skipDuplicates)
-        continue;
+      if (duplicate && duplicateAction == ZipDuplicateAction.skipDuplicates) continue;
       final title = row.title.text.trim();
       final isSong = row.target == ZipImportTarget.song;
       final numberText = row.number.text.trim();
-      final number = isSong || numberText.isEmpty
-          ? null
-          : int.tryParse(numberText);
+      final number = isSong || numberText.isEmpty ? null : int.tryParse(numberText);
       if (title.isEmpty) {
-        snack(
-          context,
-          'יש למלא שם לכל קובץ (${row.entry.path.split('/').last})',
-        );
+        snack(context, 'יש למלא שם לכל קובץ (${row.entry.path.split('/').last})');
         return;
       }
       if (!isSong &&
@@ -285,41 +263,37 @@ class _ZipImportDialogState extends State<ZipImportDialog> {
         return;
       }
       final yearText = row.year.text.trim();
-      final year = isSong && yearText.isNotEmpty
-          ? int.tryParse(yearText)
-          : null;
+      final year = isSong && yearText.isNotEmpty ? int.tryParse(yearText) : null;
       if (isSong && yearText.isNotEmpty && year == null) {
         snack(context, 'השנה של "$title" אינה תקינה');
         return;
       }
-      output.add(
-        ZipImportSelection(
-          path: row.entry.path,
-          duplicate: duplicate,
-          duplicateAction: duplicateAction,
-          target: row.target,
-          title: title,
-          number: number,
-          parasha: isSong ? '' : row.parasha.text.trim(),
-          parashaKind: row.parashaKind,
-          dateKind: row.dateKind,
-          date: row.date,
-          singerId: isSong ? row.singerId : null,
-          year: year,
-          location: isSong ? row.location.text.trim() : '',
-          lyrics: isSong ? row.lyrics : '',
-          notes: row.target == ZipImportTarget.unassigned ? '' : row.notes.text,
-        ),
-      );
+      output.add(ZipImportSelection(
+        path: row.entry.path,
+        duplicate: duplicate,
+        duplicateAction: duplicateAction,
+        target: row.target,
+        title: title,
+        number: number,
+        parasha: isSong ? '' : row.parasha.text.trim(),
+        parashaKind: row.parashaKind,
+        dateKind: row.dateKind,
+        date: row.date,
+        singerId: isSong ? row.singerId : null,
+        year: year,
+        location: isSong ? row.location.text.trim() : '',
+        lyrics: isSong ? row.lyrics : '',
+        notes: row.target == ZipImportTarget.unassigned ? '' : row.notes.text,
+      ));
     }
     Navigator.pop(context, output);
   }
 
   static String _targetLabel(ZipImportTarget target) => switch (target) {
-    ZipImportTarget.lesson => 'שיעור',
-    ZipImportTarget.song => 'שיר',
-    ZipImportTarget.unassigned => 'לא משויך',
-  };
+        ZipImportTarget.lesson => 'שיעור',
+        ZipImportTarget.song => 'שיר',
+        ZipImportTarget.unassigned => 'לא משויך',
+      };
 
   @override
   Widget build(BuildContext context) {
@@ -335,48 +309,40 @@ class _ZipImportDialogState extends State<ZipImportDialog> {
         height: height,
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                'ייבוא מתוך ZIP',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 4),
-              Text(
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            Text('ייבוא מתוך ZIP',
+                style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 4),
+            Text(
                 'בחר לכל קובץ אם הוא שיעור או שיר, ומלא את הפרטים – הוא יישמר ישירות '
                 'כשיעור / כשיר עם כל השדות שבטופס העריכה. ״לא משויך״ שומר רק את הקובץ. '
                 'סמן ״דלג״ כדי לא לייבא קובץ.',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
-              ),
-              if (_duplicateCount > 0)
-                Container(
-                  margin: const EdgeInsets.only(top: 10),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: colors.errorContainer,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.warning_amber_rounded,
-                        color: colors.onErrorContainer,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'נמצאו ${_duplicateCount} קבצים כפולים לפי שם הקובץ. השורות הכפולות מסומנות; בעת הייבוא תוכל להחליף, לדלג או לשמור את שניהם.',
-                          style: TextStyle(color: colors.onErrorContainer),
-                        ),
-                      ),
-                    ],
-                  ),
+                style: Theme.of(context)
+                    .textTheme
+                    .bodySmall
+                    ?.copyWith(color: colors.onSurfaceVariant)),
+            if (_duplicateCount > 0)
+              Container(
+                margin: const EdgeInsets.only(top: 10),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: colors.errorContainer,
+                  borderRadius: BorderRadius.circular(12),
                 ),
-              const SizedBox(height: 8),
-              Wrap(
+                child: Row(children: [
+                  Icon(Icons.warning_amber_rounded, color: colors.onErrorContainer),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'נמצאו ${_duplicateCount} קבצים כפולים לפי שם הקובץ. השורות הכפולות מסומנות; בעת הייבוא תוכל להחליף, לדלג או לשמור את שניהם.',
+                      style: TextStyle(color: colors.onErrorContainer),
+                    ),
+                  ),
+                ]),
+              ),
+            const SizedBox(height: 8),
+            Wrap(
                 spacing: 8,
                 runSpacing: 4,
                 crossAxisAlignment: WrapCrossAlignment.center,
@@ -392,41 +358,33 @@ class _ZipImportDialogState extends State<ZipImportDialog> {
                     itemBuilder: (_) => [
                       for (final target in ZipImportTarget.values)
                         PopupMenuItem(
-                          value: target,
-                          child: Text(_targetLabel(target)),
-                        ),
+                            value: target, child: Text(_targetLabel(target))),
                     ],
                     child: const Chip(
-                      avatar: Icon(Icons.arrow_drop_down_rounded),
-                      label: Text('סוג'),
-                    ),
+                        avatar: Icon(Icons.arrow_drop_down_rounded),
+                        label: Text('סוג')),
                   ),
                   if (_has(ZipImportTarget.song))
-                    PopupMenuButton<String>(
-                      tooltip: 'זמר לכל השירים',
-                      onSelected: (id) => setState(() {
-                        for (final row in rows) {
-                          row.singerId = id;
-                        }
-                      }),
-                      itemBuilder: (_) => [
-                        for (final singer in app.singers)
-                          PopupMenuItem(
-                            value: singer.id,
-                            child: Text(singer.name),
-                          ),
-                        if (app.singers.isEmpty)
-                          const PopupMenuItem(
+                  PopupMenuButton<String>(
+                    tooltip: 'זמר לכל השירים',
+                    onSelected: (id) => setState(() {
+                      for (final row in rows) {
+                        row.singerId = id;
+                      }
+                    }),
+                    itemBuilder: (_) => [
+                      for (final singer in app.singers)
+                        PopupMenuItem(value: singer.id, child: Text(singer.name)),
+                      if (app.singers.isEmpty)
+                        const PopupMenuItem(
                             enabled: false,
                             value: '',
-                            child: Text('אין זמרים – הוסף זמר בשורה של שיר'),
-                          ),
-                      ],
-                      child: const Chip(
+                            child: Text('אין זמרים – הוסף זמר בשורה של שיר')),
+                    ],
+                    child: const Chip(
                         avatar: Icon(Icons.arrow_drop_down_rounded),
-                        label: Text('זמר'),
-                      ),
-                    ),
+                        label: Text('זמר')),
+                  ),
                   ActionChip(
                     avatar: const Icon(Icons.calendar_month_rounded, size: 18),
                     label: const Text('תאריך לועזי'),
@@ -437,86 +395,74 @@ class _ZipImportDialogState extends State<ZipImportDialog> {
                     label: const Text('תאריך עברי'),
                     onPressed: () => _pickDateForAll('h'),
                   ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      '${_countOf(ZipImportTarget.lesson)} שיעורים · '
-                      '${_countOf(ZipImportTarget.song)} שירים · '
-                      '${_countOf(ZipImportTarget.unassigned)} לא משויכים · '
-                      '${rows.length - _includedCount} ידולגו',
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () =>
-                        setState(() => rows.forEach((row) => row.skip = false)),
-                    child: const Text('בחר הכל'),
-                  ),
-                  TextButton(
-                    onPressed: () =>
-                        setState(() => rows.forEach((row) => row.skip = true)),
-                    child: const Text('דלג על הכל'),
-                  ),
-                ],
-              ),
-              const Divider(height: 1),
+                ]),
+            const SizedBox(height: 8),
+            Row(children: [
               Expanded(
+                child: Text(
+                    '${_countOf(ZipImportTarget.lesson)} שיעורים · '
+                    '${_countOf(ZipImportTarget.song)} שירים · '
+                    '${_countOf(ZipImportTarget.unassigned)} לא משויכים · '
+                    '${rows.length - _includedCount} ידולגו'),
+              ),
+              TextButton(
+                  onPressed: () =>
+                      setState(() => rows.forEach((row) => row.skip = false)),
+                  child: const Text('בחר הכל')),
+              TextButton(
+                  onPressed: () =>
+                      setState(() => rows.forEach((row) => row.skip = true)),
+                  child: const Text('דלג על הכל')),
+            ]),
+            const Divider(height: 1),
+            Expanded(
+              child: SingleChildScrollView(
                 child: SingleChildScrollView(
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: DataTable(
-                      horizontalMargin: 10,
-                      columnSpacing: 10,
-                      dataRowMinHeight: 48,
-                      dataRowMaxHeight: 88,
-                      columns: [
-                        for (final entry in const [
-                          DataColumn(label: Text('סוג')),
-                          DataColumn(label: Text('שם הקובץ')),
-                          DataColumn(label: Text('שם השיעור / השיר')),
-                          DataColumn(label: Text('מספר שיעור')),
-                          DataColumn(label: Text('פרשה / אירוע')),
-                          DataColumn(label: Text('סוג פרשה')),
-                          DataColumn(label: Text('תאריך')),
-                          DataColumn(label: Text('זמר')),
-                          DataColumn(label: Text('שנה')),
-                          DataColumn(label: Text('מקום האירוע')),
-                          DataColumn(label: Text('מילים')),
-                          DataColumn(label: Text('הערות')),
-                          DataColumn(label: Text('דלג')),
-                        ].asMap().entries)
-                          if (_visibleCols.contains(entry.key)) entry.value,
-                      ],
-                      rows: [
-                        for (var index = 0; index < rows.length; index++)
-                          _buildRow(rows[index], index),
-                      ],
-                    ),
+                  scrollDirection: Axis.horizontal,
+                  child: DataTable(
+                    horizontalMargin: 10,
+                    columnSpacing: 10,
+                    dataRowMinHeight: 48,
+                    dataRowMaxHeight: 88,
+                    columns: [
+                      for (final entry in const [
+                      DataColumn(label: Text('סוג')),
+                      DataColumn(label: Text('שם הקובץ')),
+                      DataColumn(label: Text('שם השיעור / השיר')),
+                      DataColumn(label: Text('מספר שיעור')),
+                      DataColumn(label: Text('פרשה / אירוע')),
+                      DataColumn(label: Text('סוג פרשה')),
+                      DataColumn(label: Text('תאריך')),
+                      DataColumn(label: Text('זמר')),
+                      DataColumn(label: Text('שנה')),
+                      DataColumn(label: Text('מקום האירוע')),
+                      DataColumn(label: Text('מילים')),
+                      DataColumn(label: Text('הערות')),
+                      DataColumn(label: Text('דלג')),
+                      ].asMap().entries)
+                        if (_visibleCols.contains(entry.key)) entry.value,
+                    ],
+                    rows: [
+                      for (var index = 0; index < rows.length; index++)
+                        _buildRow(rows[index], index),
+                    ],
                   ),
                 ),
               ),
-              const Divider(height: 1),
-              const SizedBox(height: 12),
-              Wrap(
-                alignment: WrapAlignment.end,
-                spacing: 8,
-                children: [
-                  OutlinedButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('ביטול'),
-                  ),
-                  FilledButton.icon(
-                    onPressed: _includedCount == 0 ? null : _finish,
-                    icon: const Icon(Icons.file_download_outlined),
-                    label: Text('ייבא $_includedCount קבצים'),
-                  ),
-                ],
+            ),
+            const Divider(height: 1),
+            const SizedBox(height: 12),
+            Wrap(alignment: WrapAlignment.end, spacing: 8, children: [
+              OutlinedButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('ביטול')),
+              FilledButton.icon(
+                onPressed: _includedCount == 0 ? null : _finish,
+                icon: const Icon(Icons.file_download_outlined),
+                label: Text('ייבא $_includedCount קבצים'),
               ),
-            ],
-          ),
+            ]),
+          ]),
         ),
       ),
     );
@@ -535,9 +481,8 @@ class _ZipImportDialogState extends State<ZipImportDialog> {
     final singerValid = app.singers.any((s) => s.id == row.singerId);
 
     final all = <DataCell>[
-      // סוג: שיעור / שיר / לא משויך
-      DataCell(
-        SizedBox(
+        // סוג: שיעור / שיר / לא משויך
+        DataCell(SizedBox(
           width: 120,
           child: DropdownButtonFormField<ZipImportTarget>(
             key: ValueKey('zip-target-$path-${row.target.name}'),
@@ -546,71 +491,49 @@ class _ZipImportDialogState extends State<ZipImportDialog> {
             decoration: const InputDecoration(isDense: true),
             items: [
               for (final target in ZipImportTarget.values)
-                DropdownMenuItem(
-                  value: target,
-                  child: Text(_targetLabel(target)),
-                ),
+                DropdownMenuItem(value: target, child: Text(_targetLabel(target))),
             ],
             onChanged: active
                 ? (value) =>
-                      setState(() => _setTarget(row, value ?? row.target))
+                    setState(() => _setTarget(row, value ?? row.target))
                 : null,
           ),
-        ),
-      ),
-      DataCell(
-        SizedBox(
+        )),
+        DataCell(SizedBox(
           width: 230,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Row(
-                children: [
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Row(children: [
                   Expanded(
-                    child: Text(
-                      path.split('/').last,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                    child: Text(path.split('/').last,
+                        maxLines: 1, overflow: TextOverflow.ellipsis),
                   ),
                   if (_isDuplicate(row))
                     const Tooltip(
                       message: 'קובץ בשם זה כבר קיים במערכת',
-                      child: Icon(
-                        Icons.warning_amber_rounded,
-                        color: Colors.deepOrange,
-                        size: 18,
-                      ),
+                      child: Icon(Icons.warning_amber_rounded,
+                          color: Colors.deepOrange, size: 18),
                     ),
-                ],
-              ),
-              Text(
-                '$path · ${fmtBytes(row.entry.size)}',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ],
-          ),
-        ),
-      ),
-      DataCell(
-        SizedBox(
+                ]),
+                Text('$path · ${fmtBytes(row.entry.size)}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall),
+              ]),
+        )),
+        DataCell(SizedBox(
           width: 210,
           child: TextField(
             key: ValueKey('zip-title-$path'),
             controller: row.title,
             enabled: active,
             decoration: InputDecoration(
-              isDense: true,
-              hintText: isSong ? 'שם השיר' : 'שם השיעור',
-            ),
+                isDense: true, hintText: isSong ? 'שם השיר' : 'שם השיעור'),
           ),
-        ),
-      ),
-      DataCell(
-        SizedBox(
+        )),
+        DataCell(SizedBox(
           width: 100,
           child: TextField(
             key: ValueKey('zip-number-$path'),
@@ -620,28 +543,22 @@ class _ZipImportDialogState extends State<ZipImportDialog> {
             textDirection: TextDirection.ltr,
             inputFormatters: [
               FilteringTextInputFormatter.digitsOnly,
-              LengthLimitingTextInputFormatter(4),
+              LengthLimitingTextInputFormatter(4)
             ],
             decoration: const InputDecoration(isDense: true, hintText: 'מספר'),
           ),
-        ),
-      ),
-      DataCell(
-        SizedBox(
+        )),
+        DataCell(SizedBox(
           width: 190,
           child: TextField(
             key: ValueKey('zip-parasha-$path'),
             controller: row.parasha,
             enabled: lessonFields,
-            decoration: const InputDecoration(
-              isDense: true,
-              hintText: 'ללא פרשה',
-            ),
+            decoration:
+                const InputDecoration(isDense: true, hintText: 'ללא פרשה'),
           ),
-        ),
-      ),
-      DataCell(
-        SizedBox(
+        )),
+        DataCell(SizedBox(
           width: 110,
           child: DropdownButtonFormField<String>(
             key: ValueKey('zip-kind-$path'),
@@ -656,69 +573,56 @@ class _ZipImportDialogState extends State<ZipImportDialog> {
                 ? (value) => setState(() => row.parashaKind = value ?? 'weekly')
                 : null,
           ),
-        ),
-      ),
-      // תאריך: לועזי / עברי + בחירה
-      DataCell(
-        SizedBox(
+        )),
+        // תאריך: לועזי / עברי + בחירה
+        DataCell(SizedBox(
           width: 190,
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              DropdownButtonFormField<String>(
-                key: ValueKey('zip-datekind-$path'),
-                initialValue: row.dateKind,
-                isExpanded: true,
-                decoration: const InputDecoration(isDense: true),
-                items: const [
-                  DropdownMenuItem(value: 'g', child: Text('תאריך לועזי')),
-                  DropdownMenuItem(value: 'h', child: Text('תאריך עברי')),
-                ],
-                onChanged: dateFields
-                    ? (value) => setState(() => row.dateKind = value ?? 'g')
-                    : null,
-              ),
-              TextButton.icon(
-                key: ValueKey('zip-date-$path'),
-                onPressed: dateFields ? () => _pickDate(row) : null,
-                icon: const Icon(Icons.event_rounded, size: 18),
-                label: Text(
-                  row.dateKind == 'h'
-                      ? hebrewDate(row.date)
-                      : fmtDate(row.date),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                DropdownButtonFormField<String>(
+                  key: ValueKey('zip-datekind-$path'),
+                  initialValue: row.dateKind,
+                  isExpanded: true,
+                  decoration: const InputDecoration(isDense: true),
+                  items: const [
+                    DropdownMenuItem(value: 'g', child: Text('תאריך לועזי')),
+                    DropdownMenuItem(value: 'h', child: Text('תאריך עברי')),
+                  ],
+                  onChanged: dateFields
+                      ? (value) => setState(() => row.dateKind = value ?? 'g')
+                      : null,
                 ),
-              ),
-            ],
-          ),
-        ),
-      ),
-      // זמר (לשיר בלבד)
-      DataCell(
-        SizedBox(
+                TextButton.icon(
+                  key: ValueKey('zip-date-$path'),
+                  onPressed: dateFields ? () => _pickDate(row) : null,
+                  icon: const Icon(Icons.event_rounded, size: 18),
+                  label: Text(
+                      row.dateKind == 'h'
+                          ? hebrewDate(row.date)
+                          : fmtDate(row.date),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis),
+                ),
+              ]),
+        )),
+        // זמר (לשיר בלבד)
+        DataCell(SizedBox(
           width: 170,
           child: DropdownButtonFormField<String>(
             key: ValueKey(
-              'zip-singer-$path-${row.singerId}-${app.singers.length}',
-            ),
+                'zip-singer-$path-${row.singerId}-${app.singers.length}'),
             initialValue: singerValid ? row.singerId : null,
             isExpanded: true,
-            decoration: const InputDecoration(
-              isDense: true,
-              hintText: 'בחר זמר',
-            ),
+            decoration: const InputDecoration(isDense: true, hintText: 'בחר זמר'),
             items: [
               for (final singer in app.singers)
                 DropdownMenuItem(
-                  value: singer.id,
-                  child: Text(singer.name, overflow: TextOverflow.ellipsis),
-                ),
+                    value: singer.id,
+                    child: Text(singer.name, overflow: TextOverflow.ellipsis)),
               const DropdownMenuItem(
-                value: _newSingerValue,
-                child: Text('+ זמר חדש…'),
-              ),
+                  value: _newSingerValue, child: Text('+ זמר חדש…')),
             ],
             onChanged: songFields
                 ? (value) {
@@ -730,10 +634,8 @@ class _ZipImportDialogState extends State<ZipImportDialog> {
                   }
                 : null,
           ),
-        ),
-      ),
-      DataCell(
-        SizedBox(
+        )),
+        DataCell(SizedBox(
           width: 80,
           child: TextField(
             key: ValueKey('zip-year-$path'),
@@ -743,14 +645,12 @@ class _ZipImportDialogState extends State<ZipImportDialog> {
             textDirection: TextDirection.ltr,
             inputFormatters: [
               FilteringTextInputFormatter.digitsOnly,
-              LengthLimitingTextInputFormatter(4),
+              LengthLimitingTextInputFormatter(4)
             ],
             decoration: const InputDecoration(isDense: true, hintText: 'שנה'),
           ),
-        ),
-      ),
-      DataCell(
-        SizedBox(
+        )),
+        DataCell(SizedBox(
           width: 150,
           child: TextField(
             key: ValueKey('zip-location-$path'),
@@ -758,26 +658,21 @@ class _ZipImportDialogState extends State<ZipImportDialog> {
             enabled: songFields,
             decoration: const InputDecoration(isDense: true, hintText: 'מקום'),
           ),
-        ),
-      ),
-      DataCell(
-        SizedBox(
+        )),
+        DataCell(SizedBox(
           width: 110,
           child: TextButton.icon(
             key: ValueKey('zip-lyrics-$path'),
             onPressed: songFields ? () => _editLyrics(row) : null,
             icon: Icon(
-              row.lyrics.trim().isEmpty
-                  ? Icons.edit_note_rounded
-                  : Icons.check_circle_outline_rounded,
-              size: 18,
-            ),
+                row.lyrics.trim().isEmpty
+                    ? Icons.edit_note_rounded
+                    : Icons.check_circle_outline_rounded,
+                size: 18),
             label: Text(row.lyrics.trim().isEmpty ? 'הוסף' : 'ערוך'),
           ),
-        ),
-      ),
-      DataCell(
-        SizedBox(
+        )),
+        DataCell(SizedBox(
           width: 190,
           child: TextField(
             key: ValueKey('zip-notes-$path'),
@@ -785,26 +680,20 @@ class _ZipImportDialogState extends State<ZipImportDialog> {
             enabled: dateFields,
             decoration: const InputDecoration(isDense: true, hintText: 'הערות'),
           ),
-        ),
-      ),
-      DataCell(
-        Checkbox(
+        )),
+        DataCell(Checkbox(
           key: ValueKey('zip-skip-$path'),
           value: row.skip,
           onChanged: (value) => setState(() => row.skip = value ?? false),
-        ),
-      ),
+        )),
     ];
     final visible = _visibleCols;
     return DataRow.byIndex(
       index: index,
       color: WidgetStateProperty.resolveWith((states) {
-        if (row.skip)
-          return Theme.of(context).colorScheme.surfaceContainerHighest;
+        if (row.skip) return Theme.of(context).colorScheme.surfaceContainerHighest;
         if (_isDuplicate(row)) {
-          return Theme.of(
-            context,
-          ).colorScheme.errorContainer.withValues(alpha: .35);
+          return Theme.of(context).colorScheme.errorContainer.withValues(alpha: .35);
         }
         return null;
       }),
@@ -833,7 +722,7 @@ class _ZipImportRow {
   bool skip = false;
 
   _ZipImportRow(this.entry, this.target)
-    : title = TextEditingController(text: _titleFromPath(entry.path));
+      : title = TextEditingController(text: _titleFromPath(entry.path));
 
   void dispose() {
     title.dispose();

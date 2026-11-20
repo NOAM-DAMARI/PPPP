@@ -27,9 +27,8 @@ Future<List<FreeFile>> listMediaFiles(String folder, List<String> exts) async {
     final dot = name.lastIndexOf('.');
     if (dot < 0 || !set.contains(name.substring(dot + 1).toLowerCase()))
       continue;
-    out.add(
-      FreeFile(path: e.path, name: name, relative: rel, size: await e.length()),
-    );
+    out.add(FreeFile(
+        path: e.path, name: name, relative: rel, size: await e.length()));
   }
   out.sort((a, b) => a.relative.compareTo(b.relative));
   return out;
@@ -43,18 +42,15 @@ Future<File> _unique(Directory dir, String name) async {
   final dot = name.lastIndexOf('.');
   final base = dot > 0 ? name.substring(0, dot) : name;
   final ext = dot > 0 ? name.substring(dot) : '';
-  for (var i = 2; ; i++) {
+  for (var i = 2;; i++) {
     target = File('${dir.path}/${_safe('$base ($i)$ext')}');
     if (!target.existsSync()) return target;
   }
 }
 
 /// העתקת קבצים לתיקייה (תת-תיקייה inbox כברירת מחדל). מחזיר את הנתיבים החדשים.
-Future<List<String>> copyFilesToFolder(
-  String folder,
-  List<String> sources, {
-  String sub = 'inbox',
-}) async {
+Future<List<String>> copyFilesToFolder(String folder, List<String> sources,
+    {String sub = 'inbox'}) async {
   final dir = Directory('$folder/$sub');
   if (!dir.existsSync()) await dir.create(recursive: true);
   final out = <String>[];
@@ -70,9 +66,7 @@ Future<List<String>> copyFilesToFolder(
 /// חילוץ ZIP גדול ישירות מהדיסק (בלי לטעון את כולו לזיכרון) ופריסת הקבצים בתיקייה.
 /// שומר על מבנה התיקיות שבתוך ה-ZIP וחוסם נתיבים מסוכנים (../).
 Future<List<ZipEntry>> listImportableZipEntries(
-  String zipPath,
-  List<String> allowedExtensions,
-) async {
+    String zipPath, List<String> allowedExtensions) async {
   final input = InputFileStream(zipPath);
   try {
     final archive = ZipDecoder().decodeStream(input);
@@ -99,24 +93,18 @@ String? _safeZipPath(String path) {
   final value = _sep(path);
   if (value.startsWith('/') || RegExp(r'^[a-zA-Z]:').hasMatch(value))
     return null;
-  final parts = value
-      .split('/')
-      .where((part) => part.isNotEmpty && part != '.')
-      .toList();
+  final parts =
+      value.split('/').where((part) => part.isNotEmpty && part != '.').toList();
   if (parts.isEmpty ||
       parts.any((part) => part == '..') ||
-      parts.first == '__MACOSX')
-    return null;
+      parts.first == '__MACOSX') return null;
   return parts.join('/');
 }
 
 Future<int> extractSelectedZipEntries(
-  String folder,
-  String zipPath,
-  Set<String> selected, {
-  String sub = 'inbox',
-  void Function(int done, int total)? onProgress,
-}) async {
+    String folder, String zipPath, Set<String> selected,
+    {String sub = 'inbox',
+    void Function(int done, int total)? onProgress}) async {
   final input = InputFileStream(zipPath);
   try {
     final archive = ZipDecoder().decodeStream(input);
@@ -147,12 +135,9 @@ Future<int> extractSelectedZipEntries(
   }
 }
 
-Future<int> extractZipToFolder(
-  String folder,
-  String zipPath, {
-  String sub = 'inbox',
-  void Function(int done, int total)? onProgress,
-}) async {
+Future<int> extractZipToFolder(String folder, String zipPath,
+    {String sub = 'inbox',
+    void Function(int done, int total)? onProgress}) async {
   final input = InputFileStream(zipPath);
   try {
     final archive = ZipDecoder().decodeStream(input);
@@ -198,10 +183,7 @@ Future<void> deleteFolder(String path) async {
 
 /// כותב קובץ בודד (מארכיון שנפתח בזיכרון) לתיקייה, עם הגנה מנתיבים מסוכנים
 Future<String> writeBytesToFolder(
-  String folder,
-  String relative,
-  List<int> bytes,
-) async {
+    String folder, String relative, List<int> bytes) async {
   final rel = _safeZipPath(relative);
   if (rel == null) throw Exception('נתיב קובץ לא תקין: $relative');
   final root = Directory(folder);
@@ -212,8 +194,7 @@ Future<String> writeBytesToFolder(
     throw Exception('נתיב קובץ לא תקין: $relative');
   }
   await out.parent.create(recursive: true);
-  if (out.existsSync())
-    out = await _unique(out.parent, out.uri.pathSegments.last);
+  if (out.existsSync()) out = await _unique(out.parent, out.uri.pathSegments.last);
   await out.writeAsBytes(bytes, flush: true);
   return out.path;
 }

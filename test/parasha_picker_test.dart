@@ -3,23 +3,20 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:music_manager/widgets/parasha_picker.dart';
 
 void main() {
-  testWidgets('switches between Torah books and the events category', (
-    tester,
-  ) async {
+  testWidgets('switches between Torah books and the events category',
+      (tester) async {
     ParashaSelection? selection;
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: SingleChildScrollView(
-            child: ParashaPicker(
-              value: 'בראשית',
-              isEvent: false,
-              onChanged: (value) => selection = value,
-            ),
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: SingleChildScrollView(
+          child: ParashaPicker(
+            value: 'בראשית',
+            isEvent: false,
+            onChanged: (value) => selection = value,
           ),
         ),
       ),
-    );
+    ));
 
     await tester.tap(find.text('שמות'));
     await tester.pumpAndSettle();

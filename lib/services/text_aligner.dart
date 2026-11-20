@@ -37,11 +37,7 @@ class TextAligner {
       var rowMin = cur[0];
       for (var j = 1; j <= b.length; j++) {
         final cost = a[i - 1] == b[j - 1] ? 0 : 1;
-        final v = [
-          prev[j] + 1,
-          cur[j - 1] + 1,
-          prev[j - 1] + cost,
-        ].reduce((x, y) => x < y ? x : y);
+        final v = [prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + cost].reduce((x, y) => x < y ? x : y);
         cur[j] = v;
         if (v < rowMin) rowMin = v;
       }
@@ -65,10 +61,7 @@ class TextAligner {
   /// מחזיר שורה לכל שורה לא ריקה בטקסט, עם זמן התחלה מדויק ככל האפשר.
   static List<Seg> align(String text, List<Seg> transcript, {int? totalMs}) {
     // השורות נשמרות בדיוק כפי שהן (כולל רווחים וסימנים) – רק שורות ריקות לגמרי מדולגות
-    final lines = text
-        .split(RegExp(r'\r\n|\n|\r'))
-        .where((e) => e.trim().isNotEmpty)
-        .toList();
+    final lines = text.split(RegExp(r'\r\n|\n|\r')).where((e) => e.trim().isNotEmpty).toList();
     if (lines.isEmpty) return [];
     if (transcript.isEmpty) return [for (final l in lines) Seg(0, l)];
 
@@ -79,11 +72,7 @@ class TextAligner {
     for (var k = 0; k < transcript.length; k++) {
       final start = transcript[k].ms;
       final end = k + 1 < transcript.length ? transcript[k + 1].ms : lastMs;
-      final words = transcript[k].text
-          .split(RegExp(r'\s+'))
-          .map(norm)
-          .where((w) => w.isNotEmpty)
-          .toList();
+      final words = transcript[k].text.split(RegExp(r'\s+')).map(norm).where((w) => w.isNotEmpty).toList();
       for (var w = 0; w < words.length; w++) {
         tWords.add(words[w]);
         tTimes.add(start + ((end - start) * w / words.length).round());
@@ -95,11 +84,7 @@ class TextAligner {
     var j = 0;
     var misses = 0;
     for (var li = 0; li < lines.length; li++) {
-      final words = lines[li]
-          .split(RegExp(r'\s+'))
-          .map(norm)
-          .where((w) => w.isNotEmpty)
-          .toList();
+      final words = lines[li].split(RegExp(r'\s+')).map(norm).where((w) => w.isNotEmpty).toList();
       for (var wi = 0; wi < words.length; wi++) {
         final w = words[wi];
         // חלון חיפוש מתרחב ככל שמצטברות החטאות – כך מתאוששים מקטעים שלא תומללו
@@ -108,10 +93,7 @@ class TextAligner {
         for (var k = j; k < tWords.length && k < j + window; k++) {
           if (_similar(w, tWords[k])) {
             // בחלון רחב דורשים אישור מהמילה הבאה כדי לא לקפוץ למקום שגוי
-            if (window > 120 &&
-                wi + 1 < words.length &&
-                k + 1 < tWords.length &&
-                !_similar(words[wi + 1], tWords[k + 1])) {
+            if (window > 120 && wi + 1 < words.length && k + 1 < tWords.length && !_similar(words[wi + 1], tWords[k + 1])) {
               continue;
             }
             found = k;
@@ -122,9 +104,7 @@ class TextAligner {
           // אם המילה הראשונה לא זוהתה – מחסירים זמן משוער למילים שקדמו לה (~350ms למילה)
           if (lineTimes[li] == null) {
             final est = tTimes[found] - wi * 350;
-            final floor = li > 0 && lineTimes[li - 1] != null
-                ? lineTimes[li - 1]!
-                : 0;
+            final floor = li > 0 && lineTimes[li - 1] != null ? lineTimes[li - 1]! : 0;
             lineTimes[li] = est < floor ? floor : est;
           }
           j = found + 1;
@@ -162,10 +142,7 @@ class TextAligner {
 }
 
 /// חלון קבלת טקסט: הדבקה או בחירת קובץ txt. מחזיר את הטקסט כפי שהוא.
-Future<String?> askTextForAlignment(
-  BuildContext context, {
-  String title = 'העלאת טקסט וסידור לפי זמנים',
-}) async {
+Future<String?> askTextForAlignment(BuildContext context, {String title = 'העלאת טקסט וסידור לפי זמנים'}) async {
   final ctl = TextEditingController();
   final res = await showDialog<String>(
     context: context,
@@ -173,52 +150,34 @@ Future<String?> askTextForAlignment(
       title: Text(title),
       content: SizedBox(
         width: 560,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const Text(
-              'הדבק את הטקסט המדויק (שורה לכל קטע) או בחר קובץ. הטקסט יישמר אות באות, רק יקבל זמנים.',
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          const Text('הדבק את הטקסט המדויק (שורה לכל קטע) או בחר קובץ. הטקסט יישמר אות באות, רק יקבל זמנים.'),
+          const SizedBox(height: 10),
+          TextField(
+            controller: ctl,
+            minLines: 8,
+            maxLines: 14,
+            decoration: const InputDecoration(hintText: 'הדבק כאן טקסט...', alignLabelWithHint: true),
+          ),
+          const SizedBox(height: 8),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: OutlinedButton.icon(
+              icon: const Icon(Icons.upload_file_rounded),
+              label: const Text('בחירת קובץ טקסט'),
+              onPressed: () async {
+                final r = await FilePicker.platform
+                    .pickFiles(type: FileType.custom, allowedExtensions: ['txt', 'md', 'srt', 'vtt', 'lrc'], withData: true);
+                final bytes = r?.files.firstOrNull?.bytes;
+                if (bytes != null) ctl.text = decodeTextBytes(bytes);
+              },
             ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: ctl,
-              minLines: 8,
-              maxLines: 14,
-              decoration: const InputDecoration(
-                hintText: 'הדבק כאן טקסט...',
-                alignLabelWithHint: true,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: OutlinedButton.icon(
-                icon: const Icon(Icons.upload_file_rounded),
-                label: const Text('בחירת קובץ טקסט'),
-                onPressed: () async {
-                  final r = await FilePicker.platform.pickFiles(
-                    type: FileType.custom,
-                    allowedExtensions: ['txt', 'md', 'srt', 'vtt', 'lrc'],
-                    withData: true,
-                  );
-                  final bytes = r?.files.firstOrNull?.bytes;
-                  if (bytes != null) ctl.text = decodeTextBytes(bytes);
-                },
-              ),
-            ),
-          ],
-        ),
+          ),
+        ]),
       ),
       actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(ctx),
-          child: const Text('ביטול'),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.pop(ctx, ctl.text),
-          child: const Text('סידור לפי זמנים'),
-        ),
+        TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('ביטול')),
+        FilledButton(onPressed: () => Navigator.pop(ctx, ctl.text), child: const Text('סידור לפי זמנים')),
       ],
     ),
   );

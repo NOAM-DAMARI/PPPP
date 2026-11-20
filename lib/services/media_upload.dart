@@ -68,74 +68,56 @@ Future<Object?> _pickFreeMediaOnce(BuildContext context) async {
     builder: (dialogContext) => StatefulBuilder(
       builder: (dialogContext, updateDialog) {
         final query = search.text.trim().toLowerCase();
-        final visible = choices.where(
-          (choice) =>
-              choice.media.name.toLowerCase().contains(query) ||
-              choice.detail.toLowerCase().contains(query),
-        );
+        final visible = choices.where((choice) =>
+            choice.media.name.toLowerCase().contains(query) ||
+            choice.detail.toLowerCase().contains(query));
         return AlertDialog(
           title: Text('קבצים לא משויכים (${choices.length})'),
           content: SizedBox(
             width: 520,
             height: 440,
-            child: Column(
-              children: [
-                TextField(
-                  controller: search,
-                  autofocus: true,
-                  decoration: const InputDecoration(
+            child: Column(children: [
+              TextField(
+                controller: search,
+                autofocus: true,
+                decoration: const InputDecoration(
                     labelText: 'חיפוש קובץ',
-                    prefixIcon: Icon(Icons.search_rounded),
-                  ),
-                  onChanged: (_) => updateDialog(() {}),
-                ),
-                const SizedBox(height: 8),
-                Expanded(
-                  child: choices.isEmpty
-                      ? const Center(
-                          child: Text(
+                    prefixIcon: Icon(Icons.search_rounded)),
+                onChanged: (_) => updateDialog(() {}),
+              ),
+              const SizedBox(height: 8),
+              Expanded(
+                child: choices.isEmpty
+                    ? const Center(
+                        child: Text(
                             'אין קבצים לא משויכים.\nהעלה ZIP חדש כדי להוסיף שיעורים.',
-                            textAlign: TextAlign.center,
-                          ),
-                        )
-                      : ListView(
-                          children: [
-                            for (final choice in visible)
-                              ListTile(
-                                leading: Icon(
-                                  choice.media.unassignedId == null
-                                      ? Icons.audio_file_rounded
-                                      : Icons.cloud_done_rounded,
-                                ),
-                                title: Text(
-                                  choice.media.name,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                subtitle: Text(
-                                  '${fmtBytes(choice.media.size)} · ${choice.detail}',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                onTap: () =>
-                                    Navigator.pop(dialogContext, choice.media),
-                              ),
-                          ],
-                        ),
-                ),
-              ],
-            ),
+                            textAlign: TextAlign.center))
+                    : ListView(children: [
+                  for (final choice in visible)
+                    ListTile(
+                      leading: Icon(choice.media.unassignedId == null
+                          ? Icons.audio_file_rounded
+                          : Icons.cloud_done_rounded),
+                      title: Text(choice.media.name,
+                          maxLines: 1, overflow: TextOverflow.ellipsis),
+                      subtitle: Text(
+                          '${fmtBytes(choice.media.size)} · ${choice.detail}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis),
+                      onTap: () => Navigator.pop(dialogContext, choice.media),
+                    ),
+                ]),
+              ),
+            ]),
           ),
           actions: [
             TextButton.icon(
-              onPressed: () => Navigator.pop(dialogContext, _zipRequest),
-              icon: const Icon(Icons.folder_zip_rounded),
-              label: const Text('העלאת ZIP חדש / מעודכן'),
-            ),
+                onPressed: () => Navigator.pop(dialogContext, _zipRequest),
+                icon: const Icon(Icons.folder_zip_rounded),
+                label: const Text('העלאת ZIP חדש / מעודכן')),
             TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('ביטול'),
-            ),
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text('ביטול'))
           ],
         );
       },
@@ -148,11 +130,8 @@ Future<Object?> _pickFreeMediaOnce(BuildContext context) async {
 /// מצרף קובץ שנבחר לשיר/שיעור: שומר במכשיר, ואם GitHub מחובר – מעלה עם חלון התקדמות.
 /// מחזיר true אם הקובץ נשמר (גם אם רק במכשיר).
 Future<bool> attachMedia(
-  BuildContext context,
-  MediaFields target,
-  PickedMedia picked, {
-  required String folder,
-}) async {
+    BuildContext context, MediaFields target, PickedMedia picked,
+    {required String folder}) async {
   final oldLocal = target.filePath;
   final oldAsset = target.assetApi;
 
@@ -190,11 +169,7 @@ Future<bool> attachMedia(
   if (app.localEnabled && picked.path != null) {
     try {
       await copyMediaToLocal(
-        app.localFolder,
-        picked.path!,
-        picked.name,
-        folder,
-      );
+          app.localFolder, picked.path!, picked.name, folder);
     } catch (e) {
       debugPrint('local media copy failed: $e');
     }
@@ -213,22 +188,16 @@ Future<bool> attachMedia(
 
   try {
     await runWithProgress(context, 'מעלה את "${picked.name}"', (report) {
-      return GitHubMedia.upload(
-        picked,
-        target,
-        folder: folder,
-        onProgress: report,
-      );
+      return GitHubMedia.upload(picked, target,
+          folder: folder, onProgress: report);
     });
     app.consumeImportedLessonInfo(picked.importedMetadataKey);
     return true;
   } catch (e) {
     target.assetApi = null;
     if (context.mounted) {
-      snack(
-        context,
-        'ההעלאה ל-GitHub נכשלה – הקובץ נשמר במכשיר. אפשר לנסות שוב ממסך הקבצים.\n$e',
-      );
+      snack(context,
+          'ההעלאה ל-GitHub נכשלה – הקובץ נשמר במכשיר. אפשר לנסות שוב ממסך הקבצים.\n$e');
     }
     final savedLocally = picked.path != null;
     if (savedLocally) app.consumeImportedLessonInfo(picked.importedMetadataKey);
@@ -237,11 +206,8 @@ Future<bool> attachMedia(
 }
 
 /// העלאה מאוחרת של קובץ שנשמר רק במכשיר
-Future<bool> uploadExisting(
-  BuildContext context,
-  MediaFields target, {
-  required String folder,
-}) async {
+Future<bool> uploadExisting(BuildContext context, MediaFields target,
+    {required String folder}) async {
   final path = target.filePath;
   final size = localFileSize(path);
   if (path == null || size == null) {
@@ -249,15 +215,13 @@ Future<bool> uploadExisting(
     return false;
   }
   try {
-    await runWithProgress(context, 'מעלה את "${target.fileName ?? 'הקובץ'}"', (
-      report,
-    ) {
+    await runWithProgress(context, 'מעלה את "${target.fileName ?? 'הקובץ'}"',
+        (report) {
       return GitHubMedia.upload(
-        PickedMedia(path: path, name: target.fileName ?? 'audio', size: size),
-        target,
-        folder: folder,
-        onProgress: report,
-      );
+          PickedMedia(path: path, name: target.fileName ?? 'audio', size: size),
+          target,
+          folder: folder,
+          onProgress: report);
     });
     return true;
   } catch (e) {
@@ -271,19 +235,15 @@ Future<Duration?> probeDuration(PickedMedia m) async {
   if (m.path != null) {
     final probe = AudioPlayer();
     try {
-      final d = await probe
-          .setFilePath(m.path!)
-          .timeout(const Duration(seconds: 8));
+      final d =
+          await probe.setFilePath(m.path!).timeout(const Duration(seconds: 8));
       if (d != null && d > Duration.zero) return d;
     } catch (_) {
     } finally {
       probe.dispose();
     }
-    final head = await readLocalRange(
-      m.path!,
-      0,
-      m.size < 65536 ? m.size : 65536,
-    );
+    final head =
+        await readLocalRange(m.path!, 0, m.size < 65536 ? m.size : 65536);
     return estimateMp3Duration(head, m.size);
   }
   if (m.bytes != null)

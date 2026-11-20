@@ -16,9 +16,8 @@ void main() {
   });
 
   test('imports WebVTT and LRC timestamps', () {
-    final vtt = parseSubtitles(
-      'WEBVTT\n\n00:00:03.000 --> 00:00:04.000\nשיעור\n',
-    );
+    final vtt =
+        parseSubtitles('WEBVTT\n\n00:00:03.000 --> 00:00:04.000\nשיעור\n');
     final lrc = parseSubtitles('[00:05.20]שורה ראשונה\n[00:08.00]שורה שנייה');
 
     expect(vtt.single.start, 3000);

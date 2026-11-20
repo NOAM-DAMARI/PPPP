@@ -43,8 +43,7 @@ class _SubtitleEditorState extends State<SubtitleEditorScreen> {
   void initState() {
     super.initState();
     player.markFullScreen(l.id, true);
-    if (!player.isCurrent(l.id) && l.hasMedia)
-      player.open(track, autoplay: false);
+    if (!player.isCurrent(l.id) && l.hasMedia) player.open(track, autoplay: false);
     sub = player.p.positionStream.listen((pos) {
       if (!followPlayer || !player.isCurrent(l.id) || !player.p.playing) return;
       var idx = 0;
@@ -67,8 +66,7 @@ class _SubtitleEditorState extends State<SubtitleEditorScreen> {
     super.dispose();
   }
 
-  int _words(String s) =>
-      s.trim().isEmpty ? 0 : s.trim().split(RegExp(r'\s+')).length;
+  int _words(String s) => s.trim().isEmpty ? 0 : s.trim().split(RegExp(r'\s+')).length;
 
   void _commit() {
     if (current >= l.transcript.length) return;
@@ -87,25 +85,16 @@ class _SubtitleEditorState extends State<SubtitleEditorScreen> {
       ctl.text = _textAt(n);
       ctl.selection = TextSelection.collapsed(offset: ctl.text.length);
     });
-    if (seek && player.isCurrent(l.id))
-      player.p.seek(Duration(milliseconds: l.transcript[n].ms));
+    if (seek && player.isCurrent(l.id)) player.p.seek(Duration(milliseconds: l.transcript[n].ms));
     focus.requestFocus();
     if (scroll.hasClients) {
-      final target = (n * 56.0 - 120).clamp(
-        0.0,
-        scroll.position.maxScrollExtent,
-      );
-      scroll.animateTo(
-        target,
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOut,
-      );
+      final target = (n * 56.0 - 120).clamp(0.0, scroll.position.maxScrollExtent);
+      scroll.animateTo(target, duration: const Duration(milliseconds: 200), curve: Curves.easeOut);
     }
   }
 
-  int _endOf(int i) => i + 1 < l.transcript.length
-      ? l.transcript[i + 1].ms
-      : l.transcript[i].ms + 6000;
+  int _endOf(int i) =>
+      i + 1 < l.transcript.length ? l.transcript[i + 1].ms : l.transcript[i].ms + 6000;
 
   Future<void> _replay() async {
     if (l.transcript.isEmpty) return;
@@ -136,18 +125,11 @@ class _SubtitleEditorState extends State<SubtitleEditorScreen> {
     l.transcript = splitByWordLimit(l.transcript, maxWords);
     app.save();
     setState(() => ctl.text = _textAt(current));
-    snack(
-      context,
-      'פוצלו ${l.transcript.length - before} קטעים לפי מגבלה של $maxWords מילים',
-    );
+    snack(context, 'פוצלו ${l.transcript.length - before} קטעים לפי מגבלה של $maxWords מילים');
   }
 
   Future<void> _setWordLimit() async {
-    final v = await askText(
-      context,
-      'מגבלת מילים לכל כתובית (0 = ללא מגבלה)',
-      init: '$maxWords',
-    );
+    final v = await askText(context, 'מגבלת מילים לכל כתובית (0 = ללא מגבלה)', init: '$maxWords');
     final n = int.tryParse(v?.trim() ?? '');
     if (n == null || n < 0) return;
     await app.prefs.setInt('sub_max_words', n);
@@ -200,14 +182,8 @@ class _SubtitleEditorState extends State<SubtitleEditorScreen> {
         title: const Text('עריכת כתוביות'),
         actions: [
           IconButton(
-            tooltip: followPlayer
-                ? 'מעקב אחרי הנגן: פעיל'
-                : 'מעקב אחרי הנגן: כבוי',
-            icon: Icon(
-              followPlayer
-                  ? Icons.my_location_rounded
-                  : Icons.location_disabled_rounded,
-            ),
+            tooltip: followPlayer ? 'מעקב אחרי הנגן: פעיל' : 'מעקב אחרי הנגן: כבוי',
+            icon: Icon(followPlayer ? Icons.my_location_rounded : Icons.location_disabled_rounded),
             onPressed: () => setState(() => followPlayer = !followPlayer),
           ),
           TextButton.icon(
@@ -216,149 +192,97 @@ class _SubtitleEditorState extends State<SubtitleEditorScreen> {
             onPressed: _setWordLimit,
           ),
           if (maxWords > 0)
-            IconButton(
-              tooltip: 'פיצול כל הכתוביות לפי המגבלה',
-              icon: const Icon(Icons.call_split_rounded),
-              onPressed: _applyWordLimit,
-            ),
+            IconButton(tooltip: 'פיצול כל הכתוביות לפי המגבלה', icon: const Icon(Icons.call_split_rounded), onPressed: _applyWordLimit),
         ],
       ),
       body: l.transcript.isEmpty
-          ? Center(
-              child: Text(
-                'אין כתוביות לעריכה. צור קודם תמלול.',
-                style: TextStyle(color: c.onSurfaceVariant),
+          ? Center(child: Text('אין כתוביות לעריכה. צור קודם תמלול.', style: TextStyle(color: c.onSurfaceVariant)))
+          : Column(children: [
+              Expanded(
+                child: ListView.builder(
+                  controller: scroll,
+                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+                  itemCount: l.transcript.length,
+                  itemExtent: 56,
+                  itemBuilder: (_, i) => ListTile(
+                    dense: true,
+                    selected: i == current,
+                    selectedTileColor: c.primaryContainer.withValues(alpha: .5),
+                    leading: Text(fmt(Duration(milliseconds: l.transcript[i].ms)),
+                        style: TextStyle(color: c.primary, fontWeight: FontWeight.w700)),
+                    title: Text(i == current ? ctl.text : l.transcript[i].text, maxLines: 2, overflow: TextOverflow.ellipsis),
+                    onTap: () => _goTo(i),
+                  ),
+                ),
               ),
-            )
-          : Column(
-              children: [
-                Expanded(
-                  child: ListView.builder(
-                    controller: scroll,
-                    padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-                    itemCount: l.transcript.length,
-                    itemExtent: 56,
-                    itemBuilder: (_, i) => ListTile(
-                      dense: true,
-                      selected: i == current,
-                      selectedTileColor: c.primaryContainer.withValues(
-                        alpha: .5,
-                      ),
-                      leading: Text(
-                        fmt(Duration(milliseconds: l.transcript[i].ms)),
-                        style: TextStyle(
-                          color: c.primary,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      title: Text(
-                        i == current ? ctl.text : l.transcript[i].text,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      onTap: () => _goTo(i),
+              const Divider(height: 1),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                child: Focus(
+                  onKeyEvent: _onKey,
+                  child: TextField(
+                    controller: ctl,
+                    focusNode: focus,
+                    autofocus: true,
+                    minLines: 2,
+                    maxLines: 4,
+                    textInputAction: TextInputAction.next,
+                    onChanged: (_) => setState(() {}),
+                    style: const TextStyle(fontSize: 20, height: 1.4),
+                    decoration: InputDecoration(
+                      labelText: 'כתובית ${current + 1} / ${l.transcript.length} · '
+                          '${fmt(Duration(milliseconds: l.transcript[current].ms))}',
+                      helperText: maxWords > 0 ? '$words / $maxWords מילים' : '$words מילים',
+                      helperStyle: TextStyle(color: over ? c.error : null, fontWeight: over ? FontWeight.w700 : null),
                     ),
                   ),
                 ),
-                const Divider(height: 1),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                  child: Focus(
-                    onKeyEvent: _onKey,
-                    child: TextField(
-                      controller: ctl,
-                      focusNode: focus,
-                      autofocus: true,
-                      minLines: 2,
-                      maxLines: 4,
-                      textInputAction: TextInputAction.next,
-                      onChanged: (_) => setState(() {}),
-                      style: const TextStyle(fontSize: 20, height: 1.4),
-                      decoration: InputDecoration(
-                        labelText:
-                            'כתובית ${current + 1} / ${l.transcript.length} · '
-                            '${fmt(Duration(milliseconds: l.transcript[current].ms))}',
-                        helperText: maxWords > 0
-                            ? '$words / $maxWords מילים'
-                            : '$words מילים',
-                        helperStyle: TextStyle(
-                          color: over ? c.error : null,
-                          fontWeight: over ? FontWeight.w700 : null,
+              ),
+              SafeArea(
+                top: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+                  child: Column(children: [
+                    Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                      IconButton.filledTonal(
+                          tooltip: 'כתובית קודמת (↑)', icon: const Icon(Icons.skip_next_rounded), onPressed: () => _goTo(current - 1)),
+                      const SizedBox(width: 10),
+                      IconButton.filledTonal(
+                          tooltip: 'השמעה חוזרת של הקטע (F3 / Ctrl+R)', icon: const Icon(Icons.replay_rounded), onPressed: _replay),
+                      const SizedBox(width: 10),
+                      ListenableBuilder(
+                        listenable: player,
+                        builder: (_, __) => StreamBuilder<bool>(
+                          stream: player.p.playingStream,
+                          builder: (_, snap) {
+                            final playing = player.isCurrent(l.id) && (snap.data ?? false);
+                            return IconButton.filled(
+                              iconSize: 36,
+                              tooltip: 'הפעלה / עצירה (F2 / Ctrl+רווח)',
+                              icon: Icon(playing ? Icons.pause_rounded : Icons.play_arrow_rounded),
+                              onPressed: _togglePlay,
+                            );
+                          },
                         ),
                       ),
+                      const SizedBox(width: 10),
+                      IconButton.filledTonal(
+                          tooltip: 'קביעת זמן לרגע הנוכחי (F4 / Ctrl+T)', icon: const Icon(Icons.timer_rounded), onPressed: _stampNow),
+                      const SizedBox(width: 10),
+                      IconButton.filledTonal(
+                          tooltip: 'כתובית הבאה (Enter / ↓)', icon: const Icon(Icons.skip_previous_rounded), onPressed: () => _goTo(current + 1)),
+                    ]),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Enter / ↓ הבאה · Shift+Enter / ↑ קודמת · F2 או Ctrl+רווח הפעלה/עצירה · '
+                      'F3 או Ctrl+R השמעה חוזרת · F4 או Ctrl+T קביעת זמן · Esc יציאה',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(color: c.onSurfaceVariant),
                     ),
-                  ),
+                  ]),
                 ),
-                SafeArea(
-                  top: false,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
-                    child: Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            IconButton.filledTonal(
-                              tooltip: 'כתובית קודמת (↑)',
-                              icon: const Icon(Icons.skip_next_rounded),
-                              onPressed: () => _goTo(current - 1),
-                            ),
-                            const SizedBox(width: 10),
-                            IconButton.filledTonal(
-                              tooltip: 'השמעה חוזרת של הקטע (F3 / Ctrl+R)',
-                              icon: const Icon(Icons.replay_rounded),
-                              onPressed: _replay,
-                            ),
-                            const SizedBox(width: 10),
-                            ListenableBuilder(
-                              listenable: player,
-                              builder: (_, __) => StreamBuilder<bool>(
-                                stream: player.p.playingStream,
-                                builder: (_, snap) {
-                                  final playing =
-                                      player.isCurrent(l.id) &&
-                                      (snap.data ?? false);
-                                  return IconButton.filled(
-                                    iconSize: 36,
-                                    tooltip: 'הפעלה / עצירה (F2 / Ctrl+רווח)',
-                                    icon: Icon(
-                                      playing
-                                          ? Icons.pause_rounded
-                                          : Icons.play_arrow_rounded,
-                                    ),
-                                    onPressed: _togglePlay,
-                                  );
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            IconButton.filledTonal(
-                              tooltip: 'קביעת זמן לרגע הנוכחי (F4 / Ctrl+T)',
-                              icon: const Icon(Icons.timer_rounded),
-                              onPressed: _stampNow,
-                            ),
-                            const SizedBox(width: 10),
-                            IconButton.filledTonal(
-                              tooltip: 'כתובית הבאה (Enter / ↓)',
-                              icon: const Icon(Icons.skip_previous_rounded),
-                              onPressed: () => _goTo(current + 1),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          'Enter / ↓ הבאה · Shift+Enter / ↑ קודמת · F2 או Ctrl+רווח הפעלה/עצירה · '
-                          'F3 או Ctrl+R השמעה חוזרת · F4 או Ctrl+T קביעת זמן · Esc יציאה',
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: c.onSurfaceVariant),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ]),
     );
   }
 }

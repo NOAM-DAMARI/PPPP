@@ -14,7 +14,7 @@ String _contentsBody(({String message, String branch, Uint8List bytes}) a) =>
     jsonEncode({
       'message': a.message,
       'branch': a.branch,
-      'content': base64Encode(a.bytes),
+      'content': base64Encode(a.bytes)
     });
 
 class GitHubMedia {
@@ -29,10 +29,8 @@ class GitHubMedia {
   static Future<int> _ensureRelease() async {
     if (_releaseId != null && _releaseFor == _repo) return _releaseId!;
     final base = 'https://api.github.com/repos/$_repo/releases';
-    final get = await http.get(
-      Uri.parse('$base/tags/$releaseTag'),
-      headers: app.githubHeaders,
-    );
+    final get = await http.get(Uri.parse('$base/tags/$releaseTag'),
+        headers: app.githubHeaders);
     if (get.statusCode == 200) {
       _releaseFor = _repo;
       return _releaseId = jsonDecode(get.body)['id'] as int;
@@ -41,18 +39,18 @@ class GitHubMedia {
       throw Exception('GitHub releases ${get.statusCode}: ${get.body}');
 
     Future<http.Response> create() => http.post(
-      Uri.parse(base),
-      headers: {...app.githubHeaders, 'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'tag_name': releaseTag,
-        'target_commitish': app.githubBranch,
-        'name': 'Music Manager – קבצי מדיה',
-        'body':
-            'קבצי השירים והשיעורים של האפליקציה. אין למחוק את ה-Release הזה.',
-        'draft': false,
-        'prerelease': false,
-      }),
-    );
+          Uri.parse(base),
+          headers: {...app.githubHeaders, 'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'tag_name': releaseTag,
+            'target_commitish': app.githubBranch,
+            'name': 'Music Manager – קבצי מדיה',
+            'body':
+                'קבצי השירים והשיעורים של האפליקציה. אין למחוק את ה-Release הזה.',
+            'draft': false,
+            'prerelease': false,
+          }),
+        );
 
     var res = await create();
     if (res.statusCode == 422) {
@@ -96,22 +94,20 @@ class GitHubMedia {
         bytes: bytes is Uint8List ? bytes : Uint8List.fromList(bytes),
       ));
       final uri = Uri.parse(
-        'https://api.github.com/repos/$_repo/contents/media/$assetName',
-      );
+          'https://api.github.com/repos/$_repo/contents/media/$assetName');
       final res = await http
-          .put(
-            uri,
-            headers: {...app.githubHeaders, 'Content-Type': 'application/json'},
-            body: body,
-          )
-          .timeout(
-            const Duration(minutes: 10),
-            onTimeout: () =>
-                throw Exception('פג זמן ההעלאה – בדוק את החיבור לאינטרנט'),
-          );
+          .put(uri,
+              headers: {
+                ...app.githubHeaders,
+                'Content-Type': 'application/json'
+              },
+              body: body)
+          .timeout(const Duration(minutes: 10),
+              onTimeout: () =>
+                  throw Exception('פג זמן ההעלאה – בדוק את החיבור לאינטרנט'));
       onProgress?.call(media.size, media.size);
-      final tooLarge =
-          res.statusCode == 422 && res.body.toLowerCase().contains('too large');
+      final tooLarge = res.statusCode == 422 &&
+          res.body.toLowerCase().contains('too large');
       if (!tooLarge) {
         if (res.statusCode != 201 && res.statusCode != 200) {
           throw Exception('העלאת הקובץ נכשלה (${res.statusCode}): ${res.body}');
@@ -130,15 +126,15 @@ class GitHubMedia {
     }
 
     final id = await _ensureRelease();
-    final uri = Uri.parse(
-      'https://uploads.github.com/repos/$_repo/releases/$id/assets',
-    ).replace(queryParameters: {'name': assetName});
+    final uri =
+        Uri.parse('https://uploads.github.com/repos/$_repo/releases/$id/assets')
+            .replace(queryParameters: {'name': assetName});
 
     final res = await uploadStream(
       uri: uri,
       headers: {
         ...app.githubHeaders,
-        'Content-Type': 'application/octet-stream',
+        'Content-Type': 'application/octet-stream'
       },
       path: media.path,
       bytes: media.path == null ? media.bytes : null,
@@ -149,13 +145,10 @@ class GitHubMedia {
       if (res.status == 404) _releaseId = null;
       final detail = res.body.trim().isEmpty
           ? 'אין תשובת שרת'
-          : res.body.substring(
-              0,
-              res.body.length > 300 ? 300 : res.body.length,
-            );
+          : res.body
+              .substring(0, res.body.length > 300 ? 300 : res.body.length);
       throw Exception(
-        'העלאת הקובץ נכשלה (${res.status}). נסה שוב; בקבצים גדולים יש להשאיר את האפליקציה פתוחה עד לסיום. $detail',
-      );
+          'העלאת הקובץ נכשלה (${res.status}). נסה שוב; בקבצים גדולים יש להשאיר את האפליקציה פתוחה עד לסיום. $detail');
     }
     final j = jsonDecode(res.body);
 
@@ -180,10 +173,8 @@ class GitHubMedia {
       await _deleteContentsFile(apiUrl);
       return;
     }
-    final res = await http.delete(
-      Uri.parse(apiUrl),
-      headers: app.githubHeaders,
-    );
+    final res =
+        await http.delete(Uri.parse(apiUrl), headers: app.githubHeaders);
     if (res.statusCode != 204 && res.statusCode != 404) {
       throw Exception('מחיקה נכשלה ${res.statusCode}: ${_errorText(res.body)}');
     }
@@ -192,20 +183,15 @@ class GitHubMedia {
   static Future<void> _deleteContentsFile(String apiUrl) async {
     final parsed = Uri.parse(apiUrl);
     // כתובת נקייה בלי ?ref=... (הענף נשלח בנפרד)
-    final clean = Uri(
-      scheme: parsed.scheme,
-      host: parsed.host,
-      path: parsed.path,
-    );
+    final clean =
+        Uri(scheme: parsed.scheme, host: parsed.host, path: parsed.path);
     final info = await http.get(
-      clean.replace(queryParameters: {'ref': app.githubBranch}),
-      headers: app.githubHeaders,
-    );
+        clean.replace(queryParameters: {'ref': app.githubBranch}),
+        headers: app.githubHeaders);
     if (info.statusCode == 404) return;
     if (info.statusCode != 200) {
       throw Exception(
-        'מחיקה נכשלה: קריאת פרטי הקובץ ${info.statusCode}: ${_errorText(info.body)}',
-      );
+          'מחיקה נכשלה: קריאת פרטי הקובץ ${info.statusCode}: ${_errorText(info.body)}');
     }
     final sha = (jsonDecode(info.body) as Map)['sha']?.toString();
     if (sha == null || sha.isEmpty) {

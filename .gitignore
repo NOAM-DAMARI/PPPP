@@ -25,3 +25,16 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Flutter/Dart generated files and machine-local settings
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+**/.gradle/
+**/local.properties
+**/ephemeral/
+
+# FFmpeg build output (rebuild with third_party/ffmpeg/build.sh)
+third_party/ffmpeg/build/
+third_party/ffmpeg/bin/

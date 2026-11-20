@@ -47,11 +47,8 @@ class PickedMedia {
 
 /// בחירת קובץ. בטלפון הקובץ מועתק לאחסון האפליקציה בלי לטעון אותו לזיכרון,
 /// כך שאפשר לבחור גם קבצים של מאות MB.
-Future<PickedMedia?> pickMedia(
-  FileType type, {
-  List<String>? exts,
-  bool needBytes = false,
-}) async {
+Future<PickedMedia?> pickMedia(FileType type,
+    {List<String>? exts, bool needBytes = false}) async {
   final result = await FilePicker.platform.pickFiles(
     type: type,
     // file_picker זורק שגיאה אם מעבירים סיומות לסוג שאינו custom
@@ -65,11 +62,10 @@ Future<PickedMedia?> pickMedia(
   if (kIsWeb) {
     if (file.bytes == null || file.bytes!.isEmpty) return null;
     return PickedMedia(
-      path: null,
-      name: file.name,
-      size: file.bytes!.length,
-      bytes: file.bytes,
-    );
+        path: null,
+        name: file.name,
+        size: file.bytes!.length,
+        bytes: file.bytes);
   }
 
   String? path;
@@ -80,11 +76,7 @@ Future<PickedMedia?> pickMedia(
   }
   if (path == null) return null;
   return PickedMedia(
-    path: path,
-    name: file.name,
-    size: file.size,
-    bytes: file.bytes,
-  );
+      path: path, name: file.name, size: file.size, bytes: file.bytes);
 }
 
 Future<PickedMedia?> pickAudio() => pickMedia(FileType.custom, exts: audioExts);
